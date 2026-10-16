@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "allowImportingTsExtensions": true, "incremental": false, "types": ["node"] },
+  "include": ["supabase/functions/**/*.ts", "types/edge-runtime.d.ts"],
+  "exclude": ["node_modules"]
+}

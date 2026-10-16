@@ -1,0 +1,26 @@
+﻿# Dependencies
+node_modules/
+
+# Next.js
+.next/
+.next-frontend-preview/
+out/
+
+# Tests and coverage
+test-results/
+playwright-report/
+coverage/
+
+# Environment secrets; keep the safe example files
+.env*
+!.env.example
+!.env.frontend.example
+
+# TypeScript
+*.tsbuildinfo
+
+# Supabase local state and database backups
+supabase/.temp/
+supabase/.branches/
+*.dump
+backups/
