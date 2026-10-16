@@ -24,3 +24,10 @@ supabase/.temp/
 supabase/.branches/
 *.dump
 backups/
+
+# Project notes and documentation (kept locally, not published)
+*.md
+
+# Local agent skills and their lockfile
+.agents/
+skills-lock.json
