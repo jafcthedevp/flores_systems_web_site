@@ -51,40 +51,34 @@ test("vista previa del CRM: filtros, detalle, notas, cierre y reapertura", async
     fullPage: true,
   });
 });
-test("órbitas: texto derecho, dentro del hero y alternativa estática", async ({
+test("órbitas: texto derecho, dentro del hero y movimiento automático", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   const hero = page.locator(".hero-orbits");
   await expect(hero).toHaveCount(1);
+  await hero.scrollIntoViewIfNeeded();
   const positions = await hero.evaluate((element) => {
     const bounds = element.getBoundingClientRect();
     const captions = [...element.querySelectorAll(".visual-caption")];
-    return [0, 4000, 8000, 16000, 24000].flatMap((time) =>
-      captions.map((caption) => {
-        for (const animation of caption.getAnimations()) {
-          animation.pause();
-          animation.currentTime = time;
-        }
-        const box = caption.getBoundingClientRect();
-        return {
-          time,
-          name: caption.textContent,
-          left: box.left,
-          right: box.right,
-          top: box.top,
-          bottom: box.bottom,
-          bounds: {
-            left: bounds.left,
-            right: bounds.right,
-            top: bounds.top,
-            bottom: bounds.bottom,
-          },
-          rotate: getComputedStyle(caption).offsetRotate,
-        };
-      }),
-    );
+    return captions.map((caption) => {
+      const box = caption.getBoundingClientRect();
+      return {
+        name: caption.textContent,
+        left: box.left,
+        right: box.right,
+        top: box.top,
+        bottom: box.bottom,
+        bounds: {
+          left: bounds.left,
+          right: bounds.right,
+          top: bounds.top,
+          bottom: bounds.bottom,
+        },
+        skew: new DOMMatrix(getComputedStyle(caption).transform).b,
+      };
+    });
   });
   for (const position of positions) {
     expect(position.left, JSON.stringify(position)).toBeGreaterThanOrEqual(
@@ -99,15 +93,15 @@ test("órbitas: texto derecho, dentro del hero y alternativa estática", async (
     expect(position.bottom, JSON.stringify(position)).toBeLessThanOrEqual(
       position.bounds.bottom,
     );
-    expect(position.rotate).toBe("0deg");
+    expect(position.skew).toBe(0);
   }
   await hero.screenshot({ path: "test-results/hero-orbits-mobile.png" });
   await page.emulateMedia({ reducedMotion: "reduce" });
-  expect(
-    await page
-      .locator(".visual-caption-top")
-      .evaluate((el) => getComputedStyle(el).offsetPath),
-  ).toBe("none");
+  const caption = page.locator(".visual-caption-top");
+  const initial = await caption.evaluate((el) => el.style.transform);
+  await expect
+    .poll(() => caption.evaluate((el) => el.style.transform))
+    .not.toBe(initial);
   await page
     .locator("#contacto")
     .screenshot({ path: "test-results/contact-mobile.png" });

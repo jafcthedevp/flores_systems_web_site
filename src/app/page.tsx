@@ -10,6 +10,7 @@ import { DemoLinks } from "@/components/demos/demo-links";
 import { Contact } from "@/components/landing/contact";
 import { Footer } from "@/components/landing/footer";
 import { AnalyticsEvents } from "@/components/landing/analytics-events";
+import { ScrollMotion } from "@/components/landing/scroll-motion";
 export default function Home() {
   return (
     <>
@@ -18,17 +19,19 @@ export default function Home() {
         Ir al contenido
       </a>
       <Header />
-      <main id="contenido">
-        <Hero />
-        <Marquee />
-        <Solutions />
-        <Sectors />
-        <DemoLinks />
-        <MotionContent />
-        <Principles />
-        <About />
-        <Contact />
-      </main>
+      <ScrollMotion>
+        <main id="contenido">
+          <Hero />
+          <Marquee />
+          <Solutions />
+          <Sectors />
+          <DemoLinks />
+          <MotionContent />
+          <Principles />
+          <About />
+          <Contact />
+        </main>
+      </ScrollMotion>
       <Footer />
     </>
   );

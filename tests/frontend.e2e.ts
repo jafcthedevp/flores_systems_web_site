@@ -16,7 +16,7 @@ test("landing, navegación móvil y movimiento reducido", async ({ page }) => {
     await page
       .locator(".specialties-track")
       .evaluate((el) => getComputedStyle(el).animationName),
-  ).toBe("none");
+  ).toBe("specialties-scroll");
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -81,6 +81,7 @@ for (const kind of ["tienda", "restaurante"])
       .first()
       .click();
     await expect(page.getByRole("button", { name: /Simular/ })).toBeEnabled();
+    if (kind === "tienda") await page.getByRole("button", { name: "Pago exacto" }).click();
     await page.getByRole("button", { name: /Simular/ }).click();
     await expect(page.getByRole("status")).toContainText(
       "Simulación completada",

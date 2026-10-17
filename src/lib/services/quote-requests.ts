@@ -10,12 +10,21 @@ const receiptSchema = z.object({ code: z.enum(['created', 'replayed', 'conflict'
 export async function submitQuote(input: unknown, requestHeaders: Headers): Promise<ActionResult> {
   const parsed = quoteSchema.safeParse(input);
   if (!parsed.success) return { ok: false, code: 'invalid', errors: z.flattenError(parsed.error).fieldErrors };
+  let stage = 'configuration';
   try {
-    if (process.env.QUOTE_RATE_LIMIT_ENABLED !== 'true') return { ok: false, code: 'unavailable' };
+    if (process.env.QUOTE_RATE_LIMIT_ENABLED !== 'true') {
+      console.error('quote_service_unavailable', { stage, reason: 'intake_disabled' });
+      return { ok: false, code: 'unavailable' };
+    }
     const ipHeader = requiredEnv('TRUSTED_IP_HEADER').toLowerCase();
+    stage = 'client_ip';
     // No interpretar cadenas x-forwarded-for controladas por el cliente: el hosting debe fijar un único IP.
     const ip = requestHeaders.get(ipHeader)?.trim();
-    if (!ip || !isIP(ip)) return { ok: false, code: 'unavailable' };
+    if (!ip || !isIP(ip)) {
+      console.error('quote_service_unavailable', { stage, reason: ip ? 'invalid_client_ip' : 'missing_client_ip' });
+      return { ok: false, code: 'unavailable' };
+    }
+    stage = 'configuration';
     const secret = requiredEnv('RATE_LIMIT_HMAC_SECRET');
     if (secret.length < 32) throw new Error('INVALID_RATE_SECRET');
     const rateKey = createHmac('sha256', secret).update(ip).digest('hex');
@@ -30,7 +39,9 @@ export async function submitQuote(input: unknown, requestHeaders: Headers): Prom
     const requestId = randomUUID(), reference = randomUUID();
     const appUrl = new URL(requiredEnv('APP_URL'));
     if (appUrl.protocol !== 'https:' && !['localhost', '127.0.0.1'].includes(appUrl.hostname)) throw new Error('INVALID_APP_URL');
+    stage = 'supabase_client';
     const client = createPrivilegedClient();
+    stage = 'commit';
     const { data, error } = await client.rpc('submit_quote_request', {
       p_input: { ...contact, id: requestId, reference, idempotency_key, consent_version: PRIVACY_VERSION },
       p_fingerprint: fingerprint, p_rate_key: rateKey,
@@ -40,13 +51,23 @@ export async function submitQuote(input: unknown, requestHeaders: Headers): Prom
       }),
     });
     if (error) { console.error('quote_commit_failed', { code: error.code }); return { ok: false, code: 'unavailable' }; }
+    stage = 'receipt';
     const receipt = receiptSchema.parse(data);
     if (receipt.code === 'conflict') return { ok: false, code: 'conflict' };
     if (receipt.code === 'rate_limited') return { ok: false, code: 'rate_limited', retryAfter: receipt.retry_after };
-    if (!receipt.reference) return { ok: false, code: 'unavailable' };
+    if (!receipt.reference) {
+      console.error('quote_service_unavailable', { stage, reason: 'missing_reference' });
+      return { ok: false, code: 'unavailable' };
+    }
     return { ok: true, reference: receipt.reference };
-  } catch {
-    console.error('quote_service_unavailable');
+  } catch (error) {
+    // Solo nombres de variables y códigos propios: nunca errores crudos, IPs o datos de contacto.
+    const message = error instanceof Error ? error.message : '';
+    const variable = /^Falta configurar ([A-Z][A-Z0-9_]*)$/.exec(message)?.[1];
+    const reason = variable ? 'missing_env' :
+      message === 'INVALID_RATE_SECRET' ? 'invalid_rate_secret' :
+      message === 'INVALID_APP_URL' ? 'invalid_app_url' : 'exception';
+    console.error('quote_service_unavailable', { stage, reason, ...(variable ? { variable } : {}) });
     return { ok: false, code: 'unavailable' };
   }
 }

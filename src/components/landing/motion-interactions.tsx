@@ -9,33 +9,27 @@ export function MotionInteractions({
   useEffect(() => {
     const container = root.current;
     if (!container) return;
-    const reduced = matchMedia("(prefers-reduced-motion: reduce)");
-    const play = (demo: Element) => {
-      if (reduced.matches) return;
-      demo.classList.remove("is-playing");
-      // Reinicia la animación al pulsar «Repetir».
-      void (demo as HTMLElement).offsetWidth;
-      demo.classList.add("is-playing");
-    };
     const demos = container.querySelectorAll(".motion-demo[data-demo]");
-    const observer = new IntersectionObserver(
-      (entries) =>
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            play(entry.target);
-            observer.unobserve(entry.target);
-          }
-        }),
-      { threshold: 0.35 },
+    const observer =
+      typeof IntersectionObserver === "undefined"
+        ? null
+        : new IntersectionObserver(
+            (entries) =>
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add("is-playing");
+                } else {
+                  entry.target.classList.remove("is-playing");
+                }
+              }),
+            { threshold: 0.2 },
+          );
+    demos.forEach((demo) =>
+      observer ? observer.observe(demo) : demo.classList.add("is-playing"),
     );
-    demos.forEach((demo) => observer.observe(demo));
     const click = (event: MouseEvent) => {
-      const target = event.target as Element;
-      const replay = target.closest("[data-replay]");
-      if (replay) {
-        const demo = replay.closest(".motion-demo");
-        if (demo) play(demo);
-      }
+      const target = event.target;
+      if (!(target instanceof Element)) return;
       const button = target.closest(".try-button");
       if (button) {
         const pressed = button.getAttribute("aria-pressed") !== "true";
@@ -51,7 +45,7 @@ export function MotionInteractions({
     };
     container.addEventListener("click", click);
     return () => {
-      observer.disconnect();
+      observer?.disconnect();
       container.removeEventListener("click", click);
     };
   }, []);

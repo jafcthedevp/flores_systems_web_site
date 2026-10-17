@@ -16,12 +16,20 @@ export function DemoLinks() {
         </div>
         <div className="demo-links">
           {[
-            ["veterinaria", "Veterinaria", "Agenda y atención de mascotas."],
-            ["restaurante", "Restaurante", "Carta y pedidos de ejemplo."],
+            [
+              "veterinaria",
+              "Veterinaria",
+              "Registra citas, reprograma horarios y explora las fichas.",
+            ],
+            [
+              "restaurante",
+              "Restaurante",
+              "Arma un pedido y sigue su preparación hasta la entrega.",
+            ],
             [
               "tienda",
               "Tienda o bodega",
-              "Productos, stock y venta de ejemplo.",
+              "Repón productos, simula una venta y calcula el vuelto.",
             ],
           ].map(([slug, title, text]) => (
             <article key={slug}>

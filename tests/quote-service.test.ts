@@ -50,4 +50,29 @@ describe('recepción exclusiva del servidor', () => {
     rpc.mockResolvedValue({ data: null, error: { code: '23514', message: 'private database details' } });
     expect(await submitQuote(input, new Headers({ 'x-real-ip': '203.0.113.1' }))).toEqual({ ok: false, code: 'unavailable' });
   });
+  it('identifica la variable que falta sin registrar datos del cliente', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.stubEnv('NOTIFICATION_FROM', '');
+    expect(await submitQuote(input, new Headers({ 'x-real-ip': '203.0.113.1' }))).toEqual({ ok: false, code: 'unavailable' });
+    expect(log).toHaveBeenCalledWith('quote_service_unavailable', { stage: 'commit', reason: 'missing_env', variable: 'NOTIFICATION_FROM' });
+    expect(rpc).not.toHaveBeenCalled();
+    expect(JSON.stringify(log.mock.calls)).not.toContain(input.email);
+  });
+  it('distingue un encabezado ausente de una IP inválida sin revelar la IP', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await submitQuote(input, new Headers());
+    expect(log).toHaveBeenLastCalledWith('quote_service_unavailable', { stage: 'client_ip', reason: 'missing_client_ip' });
+    await submitQuote(input, new Headers({ 'x-real-ip': '203.0.113.1, 203.0.113.2' }));
+    expect(log).toHaveBeenLastCalledWith('quote_service_unavailable', { stage: 'client_ip', reason: 'invalid_client_ip' });
+    expect(JSON.stringify(log.mock.calls)).not.toContain('203.0.113.1');
+    expect(rpc).not.toHaveBeenCalled();
+  });
+  it('oculta los detalles de excepciones inesperadas', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    rpc.mockRejectedValue(new Error('private-token and customer@example.com'));
+    expect(await submitQuote(input, new Headers({ 'x-real-ip': '203.0.113.1' }))).toEqual({ ok: false, code: 'unavailable' });
+    expect(log).toHaveBeenLastCalledWith('quote_service_unavailable', { stage: 'commit', reason: 'exception' });
+    expect(JSON.stringify(log.mock.calls)).not.toContain('private-token');
+    expect(JSON.stringify(log.mock.calls)).not.toContain('customer@example.com');
+  });
 });

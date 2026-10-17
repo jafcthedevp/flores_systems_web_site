@@ -41,14 +41,6 @@ export function MotionContent() {
                     El contenido entra cuando llega su momento en la página.
                   </p>
                 </div>
-                <button
-                  className="replay-button"
-                  type="button"
-                  data-replay="reveal"
-                  aria-label="Repetir demostración de revelado"
-                >
-                  Repetir <span aria-hidden="true">↻</span>
-                </button>
               </div>
             </article>
 
@@ -70,14 +62,6 @@ export function MotionContent() {
                     mensaje.
                   </p>
                 </div>
-                <button
-                  className="replay-button"
-                  type="button"
-                  data-replay="ambient"
-                  aria-label="Repetir demostración de fondo animado"
-                >
-                  Repetir <span aria-hidden="true">↻</span>
-                </button>
               </div>
             </article>
 

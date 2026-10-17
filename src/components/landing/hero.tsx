@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { OrbitalScene } from "./orbital-scene";
 export function Hero() {
   return (
     <section className="hero" id="inicio" aria-labelledby="hero-title">
@@ -29,14 +30,7 @@ export function Hero() {
           </p>
         </div>
 
-        <div
-          className="hero-visual hero-orbits"
-          aria-label="Rosa azul, símbolo de Flores Systems"
-          role="img"
-        >
-          <div className="hero-gridline" aria-hidden="true"></div>
-          <div className="hero-ring hero-ring-one" aria-hidden="true"></div>
-          <div className="hero-ring hero-ring-two" aria-hidden="true"></div>
+        <OrbitalScene>
           <div className="hero-rose">
             <Image
               src="/img/flores-sys3_nobg.png"
@@ -47,13 +41,7 @@ export function Hero() {
               sizes="(max-width: 800px) 88vw, 620px"
             />
           </div>
-          <span className="visual-caption visual-caption-top">
-            Flores Systems / Estudio digital
-          </span>
-          <span className="visual-caption visual-caption-bottom">
-            Ideas que toman forma
-          </span>
-        </div>
+        </OrbitalScene>
       </div>
     </section>
   );
