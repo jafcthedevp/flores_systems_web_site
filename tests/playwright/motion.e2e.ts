@@ -98,6 +98,13 @@ for (const width of [1440, 390]) {
       const marquee = page.locator(".specialties");
       await marquee.scrollIntoViewIfNeeded();
       const track = marquee.locator(".specialties-track");
+      if (reducedMotion === "reduce") {
+        await expect(track).toHaveCSS("animation-duration", "70s");
+        await expect(scene.locator(".hero-rose img")).toHaveCSS(
+          "animation-name",
+          "rose-float-gentle",
+        );
+      }
       const initial = await track.evaluate(
         (el) => getComputedStyle(el).transform,
       );
@@ -143,8 +150,11 @@ for (const width of [1440, 390]) {
       ).toBe(true);
       const ambient = page.locator('[data-demo="ambient"]');
       await ambient.scrollIntoViewIfNeeded();
-      await expect(ambient).toHaveClass(/is-playing/);
       const orb = ambient.locator(".ambient-orb-one");
+      await expect(ambient).toHaveClass(/is-playing/);
+      if (reducedMotion === "reduce") {
+        await expect(orb).toHaveCSS("animation-duration", "12s");
+      }
       const first = await orb.evaluate((el) => getComputedStyle(el).transform);
       await expect
         .poll(() => orb.evaluate((el) => getComputedStyle(el).transform))

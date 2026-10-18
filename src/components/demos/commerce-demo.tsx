@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { dishes, money, products, type DemoItem } from "./demo-data";
+import {
+  cartEntry,
+  saleAmounts,
+  saleLines,
+  refundCents,
+  returnedQuantity,
+  type CartEntry,
+  type Sale,
+} from "./commerce-model";
+import { SalesHistory } from "./sales-history";
 
-type Line = { name: string; quantity: number; cents: number };
-type Sale = {
-  id: number;
-  lines: Line[];
-  total: number;
-  payment: string;
-  change: number;
-};
 type Order = {
   id: number;
-  lines: Line[];
+  lines: CartEntry[];
   total: number;
   service: string;
   note: string;
@@ -23,7 +25,11 @@ const nextStage = ["Pasar a cocina", "Marcar listo", "Marcar entregado"];
 export function CommerceDemo({ kind }: { kind: "tienda" | "restaurante" }) {
   const shop = kind === "tienda";
   const items = shop ? products : dishes;
-  const [cart, setCart] = useState<Record<string, number>>({});
+  const [cart, setCart] = useState<CartEntry[]>([]);
+  const [choices, setChoices] = useState<
+    Record<string, Record<string, string>>
+  >({});
+  const [discountPercent, setDiscountPercent] = useState(0);
   const [stock, setStock] = useState<Record<string, number>>(() =>
     Object.fromEntries(products.map((item) => [item.id, item.stock ?? 0])),
   );
@@ -37,9 +43,9 @@ export function CommerceDemo({ kind }: { kind: "tienda" | "restaurante" }) {
   const [message, setMessage] = useState("");
   const [sales, setSales] = useState<Sale[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
-  const total = items.reduce(
-    (sum, item) => sum + item.cents * (cart[item.id] || 0),
-    0,
+  const { subtotal, discountCents, total } = saleAmounts(
+    cart,
+    shop ? discountPercent : 0,
   );
   const received = Math.round(Number(cash) * 100);
   const visible = items.filter(
@@ -50,27 +56,101 @@ export function CommerceDemo({ kind }: { kind: "tienda" | "restaurante" }) {
         .includes(search.trim().toLocaleLowerCase("es")),
   );
   const lastSale = sales.at(-1);
+  const cartCount = (itemId: string) =>
+    cart.reduce(
+      (sum, entry) => sum + (entry.itemId === itemId ? entry.quantity : 0),
+      0,
+    );
 
   function add(item: DemoItem) {
-    setCart((current) => ({
-      ...current,
-      [item.id]: shop
-        ? Math.min(stock[item.id], (current[item.id] || 0) + 1)
-        : (current[item.id] || 0) + 1,
-    }));
+    const entry = cartEntry(item, choices[item.id]);
+    setCart((current) => {
+      if (
+        shop &&
+        current.reduce(
+          (sum, line) => sum + (line.itemId === item.id ? line.quantity : 0),
+          0,
+        ) >= stock[item.id]
+      )
+        return current;
+      return current.some((line) => line.key === entry.key)
+        ? current.map((line) =>
+            line.key === entry.key
+              ? { ...line, quantity: line.quantity + 1 }
+              : line,
+          )
+        : [...current, entry];
+    });
     setMessage("");
+  }
+  function changeQuantity(key: string, delta: number) {
+    setCart((current) =>
+      current
+        .map((entry) => {
+          if (entry.key !== key) return entry;
+          if (
+            shop &&
+            delta > 0 &&
+            current.reduce(
+              (sum, line) =>
+                sum + (line.itemId === entry.itemId ? line.quantity : 0),
+              0,
+            ) >= stock[entry.itemId]
+          )
+            return entry;
+          return { ...entry, quantity: Math.max(0, entry.quantity + delta) };
+        })
+        .filter((entry) => entry.quantity > 0),
+    );
+    setMessage("");
+  }
+  function returnSale(
+    saleId: number,
+    lineKey: string,
+    quantity: number,
+    restock: boolean,
+  ) {
+    const sale = sales.find((entry) => entry.id === saleId);
+    const line = sale?.lines.find((entry) => entry.key === lineKey);
+    if (!sale || !line || !Number.isInteger(quantity) || quantity <= 0) return;
+    const returned = returnedQuantity(sale, lineKey);
+    if (quantity > line.quantity - returned) {
+      setMessage("La cantidad supera las unidades disponibles para devolver.");
+      return;
+    }
+    const cents = refundCents(line, returned, quantity);
+    setSales((current) =>
+      current.map((entry) =>
+        entry.id === sale.id
+          ? {
+              ...entry,
+              returns: [
+                ...entry.returns,
+                {
+                  id: entry.returns.length + 1,
+                  lineKey,
+                  quantity,
+                  cents,
+                  restock,
+                },
+              ],
+            }
+          : entry,
+      ),
+    );
+    if (restock)
+      setStock((current) => ({
+        ...current,
+        [line.itemId]: current[line.itemId] + quantity,
+      }));
+    setMessage(
+      `Devolución simulada de ${money(cents)} registrada. ${restock ? "Las unidades regresaron al stock de prueba." : "El inventario se mantuvo sin reposición."} No se realizó ningún reembolso real.`,
+    );
   }
   function finish() {
     if (!total) return;
-    const lines = items
-      .filter((item) => cart[item.id])
-      .map((item) => ({
-        name: item.name,
-        quantity: cart[item.id],
-        cents: item.cents,
-      }));
     if (shop) {
-      if (items.some((item) => (cart[item.id] || 0) > stock[item.id])) {
+      if (items.some((item) => cartCount(item.id) > stock[item.id])) {
         setMessage(
           "No hay stock suficiente. Reduce la cantidad o repón el producto.",
         );
@@ -89,21 +169,26 @@ export function CommerceDemo({ kind }: { kind: "tienda" | "restaurante" }) {
         ...current,
         {
           id: current.length + 1,
-          lines,
+          lines: saleLines(cart, total),
+          subtotal,
+          discountPercent,
+          discountCents,
           total,
           payment,
           change: payment === "Efectivo" ? received - total : 0,
+          returns: [],
         },
       ]);
       setStock((current) =>
         Object.fromEntries(
           Object.entries(current).map(([id, amount]) => [
             id,
-            amount - (cart[id] || 0),
+            amount - cartCount(id),
           ]),
         ),
       );
       setCash("");
+      setDiscountPercent(0);
       setMessage(
         "Simulación completada. La venta y el stock se actualizaron solo en esta demo; no hubo ningún cobro.",
       );
@@ -112,7 +197,7 @@ export function CommerceDemo({ kind }: { kind: "tienda" | "restaurante" }) {
         ...current,
         {
           id: current.length + 1,
-          lines,
+          lines: cart,
           total,
           service: service === "En mesa" ? table : "Para llevar",
           note: note.trim(),
@@ -124,7 +209,7 @@ export function CommerceDemo({ kind }: { kind: "tienda" | "restaurante" }) {
         "Simulación completada. Sigue el pedido hasta la entrega en el tablero de prueba.",
       );
     }
-    setCart({});
+    setCart([]);
   }
   return (
     <>
@@ -138,8 +223,8 @@ export function CommerceDemo({ kind }: { kind: "tienda" | "restaurante" }) {
       </div>
       <p className="demo-hint">
         {shop
-          ? "Prueba un producto agotado, repón unidades y calcula el vuelto de una venta."
-          : "Arma un pedido, añade indicaciones y acompáñalo desde cocina hasta la entrega."}
+          ? "Repón productos, aplica un descuento y prueba una devolución después de la venta."
+          : "Personaliza cada plato, compara combinaciones y sigue las indicaciones hasta cocina."}
       </p>
       <p className="demo-feedback" role="status">
         {message}
@@ -175,7 +260,9 @@ export function CommerceDemo({ kind }: { kind: "tienda" | "restaurante" }) {
                 <small>{item.category}</small>
                 <h3>{item.name}</h3>
                 <p>{item.detail}</p>
-                <strong>{money(item.cents)}</strong>
+                <strong>
+                  {money(cartEntry(item, choices[item.id]).cents)}
+                </strong>
                 {shop ? (
                   <span
                     className={
@@ -187,9 +274,45 @@ export function CommerceDemo({ kind }: { kind: "tienda" | "restaurante" }) {
                       : "Agotado"}
                   </span>
                 ) : null}
+                {!shop && item.modifierGroups?.length ? (
+                  <details className="demo-customize">
+                    <summary>Personalizar {item.name}</summary>
+                    <div className="demo-form-stack">
+                      {item.modifierGroups.map((group) => (
+                        <label key={group.id}>
+                          {group.label} de {item.name}
+                          <select
+                            value={
+                              choices[item.id]?.[group.id] ??
+                              group.options[0].id
+                            }
+                            onChange={(event) =>
+                              setChoices((current) => ({
+                                ...current,
+                                [item.id]: {
+                                  ...current[item.id],
+                                  [group.id]: event.target.value,
+                                },
+                              }))
+                            }
+                          >
+                            {group.options.map((option) => (
+                              <option key={option.id} value={option.id}>
+                                {option.label}
+                                {option.cents
+                                  ? ` (+${money(option.cents)})`
+                                  : ""}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      ))}
+                    </div>
+                  </details>
+                ) : null}
                 <button
                   className="button button-text"
-                  disabled={shop && (cart[item.id] || 0) >= stock[item.id]}
+                  disabled={shop && cartCount(item.id) >= stock[item.id]}
                   onClick={() => add(item)}
                 >
                   Agregar {item.name}
@@ -225,39 +348,72 @@ export function CommerceDemo({ kind }: { kind: "tienda" | "restaurante" }) {
           aria-label={shop ? "Caja de prueba" : "Pedido de prueba"}
         >
           <h3>{shop ? "Resumen de venta" : "Pedido de ejemplo"}</h3>
-          {items
-            .filter((item) => cart[item.id])
-            .map((item) => (
-              <div className="cart-line" key={item.id}>
+          {cart.map((entry) => {
+            const description = [
+              entry.name,
+              ...entry.modifiers.map((option) => option.label),
+            ].join(", ");
+            return (
+              <div className="cart-line" key={entry.key}>
                 <span>
-                  {item.name}
-                  <small>{money(item.cents * cart[item.id])}</small>
+                  {entry.name}
+                  {entry.modifiers.length ? (
+                    <small className="demo-modifier-summary">
+                      {entry.modifiers
+                        .map((option) => option.label)
+                        .join(" · ")}
+                    </small>
+                  ) : null}
+                  <small>{money(entry.cents * entry.quantity)}</small>
                 </span>
                 <div className="demo-quantity">
                   <button
-                    aria-label={`Quitar una unidad de ${item.name}`}
-                    onClick={() =>
-                      setCart((current) => ({
-                        ...current,
-                        [item.id]: Math.max(0, current[item.id] - 1),
-                      }))
-                    }
+                    aria-label={`Quitar una unidad de ${description}`}
+                    onClick={() => changeQuantity(entry.key, -1)}
                   >
                     −
                   </button>
-                  <span>{cart[item.id]}</span>
+                  <span>{entry.quantity}</span>
                   <button
-                    aria-label={`Aumentar unidades de ${item.name}`}
-                    disabled={shop && cart[item.id] >= stock[item.id]}
-                    onClick={() => add(item)}
+                    aria-label={`Aumentar unidades de ${description}`}
+                    disabled={
+                      shop && cartCount(entry.itemId) >= stock[entry.itemId]
+                    }
+                    onClick={() => changeQuantity(entry.key, 1)}
                   >
                     +
                   </button>
                 </div>
               </div>
-            ))}
+            );
+          })}
           {!total ? (
             <p>Agrega un {shop ? "producto" : "plato"} para probar el flujo.</p>
+          ) : null}
+          {shop && cart.length ? (
+            <div className="demo-discount">
+              <label>
+                Descuento de la venta
+                <select
+                  value={discountPercent}
+                  onChange={(event) =>
+                    setDiscountPercent(Number(event.target.value))
+                  }
+                >
+                  {[0, 5, 10, 15, 20].map((percent) => (
+                    <option key={percent} value={percent}>
+                      {percent ? `${percent}% de descuento` : "Sin descuento"}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p>Subtotal: {money(subtotal)}</p>
+              {discountCents ? (
+                <p className="demo-complete">
+                  Descuento: −{money(discountCents)}
+                </p>
+              ) : null}
+            </div>
           ) : null}
           <p className="demo-total">Total: {money(total)}</p>
           <div className="demo-form-stack">
@@ -361,7 +517,8 @@ export function CommerceDemo({ kind }: { kind: "tienda" | "restaurante" }) {
               className="button button-text"
               disabled={!total}
               onClick={() => {
-                setCart({});
+                setCart([]);
+                setDiscountPercent(0);
                 setCash("");
                 setNote("");
                 setMessage("");
@@ -377,11 +534,17 @@ export function CommerceDemo({ kind }: { kind: "tienda" | "restaurante" }) {
           <div>
             <h3>Venta simulada {String(lastSale.id).padStart(3, "0")}</h3>
             {lastSale.lines.map((line) => (
-              <p key={line.name}>
+              <p key={line.key}>
                 {line.name} × {line.quantity} ·{" "}
                 {money(line.cents * line.quantity)}
               </p>
             ))}
+            {lastSale.discountCents ? (
+              <p>
+                Subtotal: {money(lastSale.subtotal)} · Descuento (
+                {lastSale.discountPercent}%): −{money(lastSale.discountCents)}
+              </p>
+            ) : null}
             <strong>Total: {money(lastSale.total)}</strong>
             <p>
               {lastSale.payment}
@@ -391,14 +554,26 @@ export function CommerceDemo({ kind }: { kind: "tienda" | "restaurante" }) {
             </p>
           </div>
           <div>
-            <span>Acumulado de esta sesión</span>
+            <span>Acumulado neto de esta sesión</span>
             <p className="demo-total">
-              {money(sales.reduce((sum, sale) => sum + sale.total, 0))}
+              {money(
+                sales.reduce(
+                  (sum, sale) =>
+                    sum +
+                    sale.total -
+                    sale.returns.reduce(
+                      (refund, entry) => refund + entry.cents,
+                      0,
+                    ),
+                  0,
+                ),
+              )}
             </p>
             <small>Comprobante de demostración, sin valor fiscal.</small>
           </div>
         </section>
       ) : null}
+      {shop ? <SalesHistory sales={sales} onReturn={returnSale} /> : null}
       {!shop ? (
         <section className="demo-orders">
           <h3>Seguimiento de pedidos</h3>
@@ -421,9 +596,18 @@ export function CommerceDemo({ kind }: { kind: "tienda" | "restaurante" }) {
                   </div>
                   <p>{order.service}</p>
                   {order.lines.map((line) => (
-                    <p key={line.name}>
-                      {line.quantity} × {line.name}
-                    </p>
+                    <div key={line.key} className="demo-kitchen-line">
+                      <p>
+                        {line.quantity} × {line.name}
+                      </p>
+                      {line.modifiers.length ? (
+                        <p className="demo-kitchen-modifiers">
+                          {line.modifiers
+                            .map((option) => option.label)
+                            .join(" · ")}
+                        </p>
+                      ) : null}
+                    </div>
                   ))}
                   {order.note ? (
                     <p className="demo-order-note preserve-text">

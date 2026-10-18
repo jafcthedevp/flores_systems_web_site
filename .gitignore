@@ -5,6 +5,7 @@ node_modules/
 .next/
 .next-frontend-preview/
 .next-motion/
+.next-e2e/
 out/
 
 # Tests and coverage
@@ -31,8 +32,6 @@ backups/
 *.md
 scripts/
 !scripts/
-!scripts/legacy/
-!scripts/legacy/**
 
 # Local agent skills and their lockfile
 .agents/

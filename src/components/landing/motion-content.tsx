@@ -1,4 +1,5 @@
 import { MotionInteractions } from "./motion-interactions";
+import { ScrollScene } from "./scroll-motion";
 export function MotionContent() {
   return (
     <MotionInteractions>
@@ -21,78 +22,80 @@ export function MotionContent() {
             </p>
           </div>
 
-          <div className="demo-list">
-            <article className="motion-demo" data-demo="reveal">
-              <div className="demo-stage reveal-stage" aria-hidden="true">
-                <div className="reveal-card reveal-card-back"></div>
-                <div className="reveal-card reveal-card-mid"></div>
-                <div className="reveal-card reveal-card-front">
+          <ScrollScene scene="gallery">
+            <div className="demo-list">
+              <article className="motion-demo" data-demo="reveal">
+                <div className="demo-stage reveal-stage" aria-hidden="true">
+                  <div className="reveal-card reveal-card-back"></div>
+                  <div className="reveal-card reveal-card-mid"></div>
+                  <div className="reveal-card reveal-card-front">
+                    <span>
+                      Una historia
+                      <br />
+                      que aparece.
+                    </span>
+                  </div>
+                </div>
+                <div className="demo-description">
+                  <div>
+                    <h3>Revelado al recorrer</h3>
+                    <p>
+                      El contenido entra cuando llega su momento en la página.
+                    </p>
+                  </div>
+                </div>
+              </article>
+
+              <article className="motion-demo" data-demo="ambient">
+                <div className="demo-stage ambient-stage" aria-hidden="true">
+                  <div className="ambient-orb ambient-orb-one"></div>
+                  <div className="ambient-orb ambient-orb-two"></div>
                   <span>
-                    Una historia
+                    Respira.
                     <br />
-                    que aparece.
+                    Explora.
                   </span>
                 </div>
-              </div>
-              <div className="demo-description">
-                <div>
-                  <h3>Revelado al recorrer</h3>
-                  <p>
-                    El contenido entra cuando llega su momento en la página.
-                  </p>
+                <div className="demo-description">
+                  <div>
+                    <h3>Fondo que acompaña</h3>
+                    <p>
+                      Movimiento suave que construye atmósfera sin tapar el
+                      mensaje.
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </article>
+              </article>
 
-            <article className="motion-demo" data-demo="ambient">
-              <div className="demo-stage ambient-stage" aria-hidden="true">
-                <div className="ambient-orb ambient-orb-one"></div>
-                <div className="ambient-orb ambient-orb-two"></div>
-                <span>
-                  Respira.
-                  <br />
-                  Explora.
-                </span>
-              </div>
-              <div className="demo-description">
-                <div>
-                  <h3>Fondo que acompaña</h3>
-                  <p>
-                    Movimiento suave que construye atmósfera sin tapar el
-                    mensaje.
-                  </p>
+              <article className="motion-demo" data-demo="response">
+                <div className="demo-stage response-stage">
+                  <span className="response-label">
+                    Una respuesta clara a cada acción
+                  </span>
+                  <button
+                    className="try-button"
+                    type="button"
+                    aria-pressed="false"
+                  >
+                    Probar interacción <span aria-hidden="true">↗</span>
+                  </button>
+                  <span
+                    className="response-signal"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    Toca el botón
+                  </span>
                 </div>
-              </div>
-            </article>
-
-            <article className="motion-demo" data-demo="response">
-              <div className="demo-stage response-stage">
-                <span className="response-label">
-                  Una respuesta clara a cada acción
-                </span>
-                <button
-                  className="try-button"
-                  type="button"
-                  aria-pressed="false"
-                >
-                  Probar interacción <span aria-hidden="true">↗</span>
-                </button>
-                <span
-                  className="response-signal"
-                  role="status"
-                  aria-live="polite"
-                >
-                  Toca el botón
-                </span>
-              </div>
-              <div className="demo-description">
-                <div>
-                  <h3>Microinteracción</h3>
-                  <p>Un detalle confirma lo que acaba de pasar.</p>
+                <div className="demo-description">
+                  <div>
+                    <h3>Microinteracción</h3>
+                    <p>Un detalle confirma lo que acaba de pasar.</p>
+                  </div>
                 </div>
-              </div>
-            </article>
-          </div>
+              </article>
+            </div>
+          </ScrollScene>
         </div>
       </section>
     </MotionInteractions>

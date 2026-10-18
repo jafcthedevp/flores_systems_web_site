@@ -1,7 +1,9 @@
 import { defineConfig } from "@playwright/test";
+import { projectRoot, testResultsDir } from "./paths";
 
 export default defineConfig({
-  testDir: "./tests",
+  testDir: ".",
+  outputDir: testResultsDir,
   testMatch: "**/motion.e2e.ts",
   workers: 1,
   use: {
@@ -11,6 +13,7 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   webServer: {
+    cwd: projectRoot,
     command: "npm run build && npm run start -- --port 3102",
     url: "http://localhost:3102",
     timeout: 180000,

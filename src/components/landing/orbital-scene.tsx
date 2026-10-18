@@ -20,7 +20,11 @@ export function OrbitalScene({ children }: { children: React.ReactNode }) {
       pointerY = 0,
       cameraX = 0,
       cameraY = 0;
-    const started = performance.now();
+    let previousTime = performance.now();
+    let elapsed = 0;
+    const motionPreference = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    );
     const resize = () => {
       width = scene.clientWidth;
       height = scene.clientHeight;
@@ -37,29 +41,33 @@ export function OrbitalScene({ children }: { children: React.ReactNode }) {
           );
       }
     };
-    const tick = (now: number) => {
-      cameraX += (pointerX - cameraX) * 0.045;
-      cameraY += (pointerY - cameraY) * 0.045;
+    const paint = () => {
+      const intensity = motionPreference.matches ? 0.35 : 1;
+      cameraX += (pointerX * intensity - cameraX) * 0.045;
+      cameraY += (pointerY * intensity - cameraY) * 0.045;
       scene.style.setProperty("--parallax-x", `${(cameraX * 7).toFixed(2)}px`);
       scene.style.setProperty("--parallax-y", `${(cameraY * 5).toFixed(2)}px`);
       for (let index = 0; index < ORBITS.length; index++) {
         const node = nodes.current[index];
         if (!node) continue;
-        const point = orbitPosition(
-          index,
-          (now - started) / 1000,
-          cameraX,
-          cameraY,
-        );
+        const point = orbitPosition(index, elapsed, cameraX, cameraY);
         node.style.transform = `translate3d(${(point.x * radius.x).toFixed(2)}px, ${(point.y * radius.y).toFixed(2)}px, 0) translate(-50%, -50%) scale(${point.scale.toFixed(4)})`;
         node.style.zIndex = String(point.layer);
         node.style.opacity = String(point.opacity);
         node.style.setProperty("--orbit-depth", point.depth.toFixed(4));
       }
+    };
+    const tick = (now: number) => {
+      const speed = motionPreference.matches ? 0.35 : 1;
+      elapsed += (Math.min(now - previousTime, 64) / 1000) * speed;
+      previousTime = now;
+      paint();
       frame = requestAnimationFrame(tick);
     };
     const sync = () => {
       cancelAnimationFrame(frame);
+      previousTime = performance.now();
+      paint();
       if (visible && !document.hidden) frame = requestAnimationFrame(tick);
     };
     const move = (event: PointerEvent) => {
@@ -95,6 +103,7 @@ export function OrbitalScene({ children }: { children: React.ReactNode }) {
     scene.addEventListener("pointermove", move, { passive: true });
     scene.addEventListener("pointerleave", leave);
     document.addEventListener("visibilitychange", sync);
+    motionPreference.addEventListener("change", sync);
     sync();
     return () => {
       cancelAnimationFrame(frame);
@@ -103,6 +112,7 @@ export function OrbitalScene({ children }: { children: React.ReactNode }) {
       scene.removeEventListener("pointermove", move);
       scene.removeEventListener("pointerleave", leave);
       document.removeEventListener("visibilitychange", sync);
+      motionPreference.removeEventListener("change", sync);
     };
   }, []);
 

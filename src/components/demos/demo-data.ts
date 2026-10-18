@@ -1,3 +1,11 @@
+export type DemoModifier = {
+  id: string;
+  label: string;
+  cents: number;
+  showOnTicket?: boolean;
+};
+type ModifierGroup = { id: string; label: string; options: DemoModifier[] };
+
 export type DemoItem = {
   id: string;
   name: string;
@@ -5,6 +13,7 @@ export type DemoItem = {
   cents: number;
   category: string;
   stock?: number;
+  modifierGroups?: ModifierGroup[];
 };
 
 export const products: DemoItem[] = [
@@ -56,6 +65,22 @@ export const dishes: DemoItem[] = [
     detail: "Entrada + plato de fondo",
     cents: 1600,
     category: "Platos",
+    modifierGroups: [
+      {
+        id: "side",
+        label: "Acompañamiento",
+        options: [
+          { id: "arroz", label: "Arroz", cents: 0, showOnTicket: true },
+          { id: "ensalada", label: "Ensalada", cents: 0, showOnTicket: true },
+          {
+            id: "papas",
+            label: "Papas fritas",
+            cents: 200,
+            showOnTicket: true,
+          },
+        ],
+      },
+    ],
   },
   {
     id: "saltado",
@@ -63,6 +88,41 @@ export const dishes: DemoItem[] = [
     detail: "Con arroz y papas",
     cents: 2800,
     category: "Platos",
+    modifierGroups: [
+      {
+        id: "preparation",
+        label: "Preparación",
+        options: [
+          { id: "original", label: "Receta original", cents: 0 },
+          {
+            id: "sin-cebolla",
+            label: "Sin cebolla",
+            cents: 0,
+            showOnTicket: true,
+          },
+          {
+            id: "sin-tomate",
+            label: "Sin tomate",
+            cents: 0,
+            showOnTicket: true,
+          },
+        ],
+      },
+      {
+        id: "extra",
+        label: "Adicional",
+        options: [
+          { id: "ninguno", label: "Sin adicional", cents: 0 },
+          { id: "huevo", label: "Huevo frito", cents: 350, showOnTicket: true },
+          {
+            id: "carne",
+            label: "Extra de carne",
+            cents: 700,
+            showOnTicket: true,
+          },
+        ],
+      },
+    ],
   },
   {
     id: "limonada",
@@ -70,6 +130,17 @@ export const dishes: DemoItem[] = [
     detail: "Vaso de 450 ml",
     cents: 700,
     category: "Bebidas",
+    modifierGroups: [
+      {
+        id: "sugar",
+        label: "Azúcar",
+        options: [
+          { id: "normal", label: "Normal", cents: 0 },
+          { id: "poca", label: "Poca azúcar", cents: 0, showOnTicket: true },
+          { id: "sin", label: "Sin azúcar", cents: 0, showOnTicket: true },
+        ],
+      },
+    ],
   },
   {
     id: "causa",
@@ -77,6 +148,16 @@ export const dishes: DemoItem[] = [
     detail: "Porción de entrada",
     cents: 1200,
     category: "Entradas",
+    modifierGroups: [
+      {
+        id: "preparation",
+        label: "Preparación",
+        options: [
+          { id: "original", label: "Receta original", cents: 0 },
+          { id: "sin-aji", label: "Sin ají", cents: 0, showOnTicket: true },
+        ],
+      },
+    ],
   },
   {
     id: "chicha",
@@ -84,6 +165,17 @@ export const dishes: DemoItem[] = [
     detail: "Jarra de 1 L",
     cents: 1400,
     category: "Bebidas",
+    modifierGroups: [
+      {
+        id: "sugar",
+        label: "Azúcar",
+        options: [
+          { id: "normal", label: "Normal", cents: 0 },
+          { id: "poca", label: "Poca azúcar", cents: 0, showOnTicket: true },
+          { id: "sin", label: "Sin azúcar", cents: 0, showOnTicket: true },
+        ],
+      },
+    ],
   },
 ];
 export const money = (cents: number) =>

@@ -39,7 +39,9 @@
     ".next-frontend-preview/types/**/*.ts",
     ".next-frontend-preview/dev/types/**/*.ts",
     ".next-motion/types/**/*.ts",
-    ".next-motion/dev/types/**/*.ts"
+    ".next-motion/dev/types/**/*.ts",
+    ".next-e2e/types/**/*.ts",
+    ".next-e2e/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

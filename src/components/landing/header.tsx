@@ -2,9 +2,20 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-export function Header() {
+export function Header({ overHero = false }: { overHero?: boolean }) {
+  const root = useRef<HTMLElement>(null);
   const [open, setOpen] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const header = root.current;
+    if (!overHero || !header) return;
+    const sync = () => {
+      header.dataset.scrolled = String(window.scrollY > 24);
+    };
+    sync();
+    window.addEventListener("scroll", sync, { passive: true });
+    return () => window.removeEventListener("scroll", sync);
+  }, [overHero]);
   useEffect(() => {
     const close = (e: KeyboardEvent) => {
       if (e.key === "Escape" && open) {
@@ -24,7 +35,10 @@ export function Header() {
     };
   }, [open]);
   return (
-    <header className="site-header">
+    <header
+      ref={root}
+      className={overHero ? "site-header site-header-hero" : "site-header"}
+    >
       <div className="header-inner wrap">
         <Link
           className="brand"

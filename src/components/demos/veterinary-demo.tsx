@@ -1,14 +1,11 @@
 import { useState, type FormEvent } from "react";
+import { PatientReminders } from "./patient-reminders";
+import {
+  visitStages,
+  type Appointment,
+  type VisitStatus,
+} from "./veterinary-model";
 
-type Appointment = {
-  id: number;
-  name: string;
-  owner: string;
-  time: string;
-  service: string;
-  done: boolean;
-  notes: string[];
-};
 const initialAppointments: Appointment[] = [
   {
     id: 1,
@@ -16,8 +13,9 @@ const initialAppointments: Appointment[] = [
     owner: "Cliente de ejemplo A",
     time: "09:30",
     service: "Consulta",
-    done: false,
+    status: "pending",
     notes: ["Primera visita de ejemplo."],
+    reminders: [],
   },
   {
     id: 2,
@@ -25,8 +23,9 @@ const initialAppointments: Appointment[] = [
     owner: "Cliente de ejemplo B",
     time: "10:15",
     service: "Vacunación",
-    done: false,
+    status: "waiting",
     notes: [],
+    reminders: [],
   },
   {
     id: 3,
@@ -34,8 +33,9 @@ const initialAppointments: Appointment[] = [
     owner: "Cliente de ejemplo C",
     time: "11:00",
     service: "Control",
-    done: true,
+    status: "completed",
     notes: [],
+    reminders: [],
   },
 ];
 const validTime = (value: string) =>
@@ -61,10 +61,20 @@ export function VeterinaryDemo() {
           .toLocaleLowerCase("es")
           .includes(search.trim().toLocaleLowerCase("es")) &&
         (filter === "Todas" ||
-          (filter === "Atendidas" ? item.done : !item.done)),
+          item.status ===
+            (
+              {
+                Pendientes: "pending",
+                "En espera": "waiting",
+                "En atención": "consulting",
+                Atendidas: "completed",
+              } as Record<string, VisitStatus>
+            )[filter]),
     )
     .sort((a, b) => a.time.localeCompare(b.time));
-  const pending = appointments.filter((item) => !item.done).length;
+  const pending = appointments.filter(
+    (item) => item.status !== "completed",
+  ).length;
 
   function register(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -91,8 +101,9 @@ export function VeterinaryDemo() {
         owner: owner.trim(),
         time,
         service,
-        done: false,
+        status: "pending",
         notes: [],
+        reminders: [],
       },
     ]);
     setSelectedId(id);
@@ -124,7 +135,7 @@ export function VeterinaryDemo() {
     setAppointments((current) =>
       current.map((item) =>
         item.id === selected.id
-          ? { ...item, time: reschedule, done: false }
+          ? { ...item, time: reschedule, status: "pending" }
           : item,
       ),
     );
@@ -137,12 +148,13 @@ export function VeterinaryDemo() {
       <div className="workspace-heading">
         <h2>Agenda de ejemplo</h2>
         <span className="badge">
-          {pending} pendientes · {appointments.length - pending} atendidas
+          {pending} sin finalizar · {appointments.length - pending} finalizadas
         </span>
       </div>
       <p className="demo-hint">
-        Registra una mascota, prueba un horario ocupado y añade una nota a su
-        ficha. Agenda de hoy, de 09:00 a 18:00.
+        Registra la llegada, inicia la atención y finaliza la visita. En la
+        ficha puedes preparar recordatorios de controles o vacunas. Agenda de
+        hoy, de 09:00 a 18:00.
       </p>
       <p className="demo-feedback" role="status">
         {message}
@@ -167,56 +179,73 @@ export function VeterinaryDemo() {
               >
                 <option>Todas</option>
                 <option>Pendientes</option>
+                <option>En espera</option>
+                <option>En atención</option>
                 <option>Atendidas</option>
               </select>
             </label>
           </div>
           <div className="request-list demo-appointments">
-            {visible.map((item) => (
-              <article key={item.id} aria-label={`Cita de ${item.name}`}>
-                <div>
-                  <strong>
-                    {item.time} · {item.name}
-                  </strong>
-                  <p>{item.owner}</p>
-                  <p>{item.service}</p>
-                  <span className="badge">
-                    {item.done ? "Atendido" : "Pendiente"}
-                  </span>
-                </div>
-                <div className="demo-appointment-actions">
-                  <button
-                    className="button button-text"
-                    aria-label={`Ver ficha de ${item.name}`}
-                    aria-expanded={selectedId === item.id}
-                    onClick={() => {
-                      setSelectedId(item.id);
-                      setReschedule(item.time);
-                      setNote("");
-                    }}
-                  >
-                    Ver ficha
-                  </button>
-                  <button
-                    className="button button-text"
-                    onClick={() => {
-                      setAppointments((current) =>
-                        current.map((entry) =>
-                          entry.id === item.id
-                            ? { ...entry, done: !entry.done }
-                            : entry,
-                        ),
-                      );
-                      setMessage(
-                        `${item.name}: ${item.done ? "cita pendiente" : "atención completada"}.`,
-                      );
-                    }}
-                  >
-                    {item.done ? "Volver a pendiente" : "Marcar atendido"}
-                  </button>
-                </div>
-              </article>
-            ))}
+            {visible.map((item) => {
+              const stageIndex = visitStages.findIndex(
+                (stage) => stage.id === item.status,
+              );
+              const stage = visitStages[stageIndex];
+              return (
+                <article key={item.id} aria-label={`Cita de ${item.name}`}>
+                  <div>
+                    <strong>
+                      {item.time} · {item.name}
+                    </strong>
+                    <p>{item.owner}</p>
+                    <p>{item.service}</p>
+                    <span
+                      className="badge demo-visit-status"
+                      data-state={item.status}
+                    >
+                      {stage.label}
+                    </span>
+                  </div>
+                  <div className="demo-appointment-actions">
+                    <button
+                      className="button button-text"
+                      aria-label={`Ver ficha de ${item.name}`}
+                      aria-expanded={selectedId === item.id}
+                      onClick={() => {
+                        setSelectedId(item.id);
+                        setReschedule(item.time);
+                        setNote("");
+                      }}
+                    >
+                      Ver ficha
+                    </button>
+                    <button
+                      className="button button-text"
+                      onClick={() => {
+                        setAppointments((current) =>
+                          current.map((entry) =>
+                            entry.id === item.id
+                              ? {
+                                  ...entry,
+                                  status:
+                                    visitStages[
+                                      (stageIndex + 1) % visitStages.length
+                                    ].id,
+                                }
+                              : entry,
+                          ),
+                        );
+                        setMessage(
+                          `${item.name}: ${visitStages[(stageIndex + 1) % visitStages.length].label.toLocaleLowerCase("es")}.`,
+                        );
+                      }}
+                    >
+                      {stage.action}
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
           </div>
           {!visible.length ? (
             <p className="empty-state">
@@ -294,6 +323,26 @@ export function VeterinaryDemo() {
           <p>
             {selected.owner} · {selected.service} · {selected.time}
           </p>
+          <div
+            className="demo-visit-steps"
+            role="group"
+            aria-label="Etapas de atención"
+          >
+            {visitStages.map((stage, index) => (
+              <span
+                key={stage.id}
+                aria-current={selected.status === stage.id ? "step" : undefined}
+                className={
+                  index <=
+                  visitStages.findIndex((entry) => entry.id === selected.status)
+                    ? "is-complete"
+                    : undefined
+                }
+              >
+                {stage.label}
+              </span>
+            ))}
+          </div>
           <div className="demo-columns">
             <form className="demo-form-stack" onSubmit={changeTime}>
               <h4>Reprogramar atención</h4>
@@ -362,6 +411,18 @@ export function VeterinaryDemo() {
               </form>
             </div>
           </div>
+          <PatientReminders
+            key={selected.id}
+            appointment={selected}
+            announce={setMessage}
+            update={(reminders) =>
+              setAppointments((current) =>
+                current.map((item) =>
+                  item.id === selected.id ? { ...item, reminders } : item,
+                ),
+              )
+            }
+          />
         </section>
       ) : null}
     </>

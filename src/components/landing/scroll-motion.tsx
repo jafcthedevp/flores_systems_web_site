@@ -1,6 +1,147 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
+import { motion, useScroll, useTransform } from "motion/react";
+
+type ScrollAnimationMode = "disabled" | "reduced" | "full";
+const ScrollAnimationContext = createContext<ScrollAnimationMode>("disabled");
+const reducedMotionQuery = "(prefers-reduced-motion: reduce)";
+
+function subscribeToMotionPreference(onChange: () => void) {
+  const preference = window.matchMedia(reducedMotionQuery);
+  preference.addEventListener("change", onChange);
+  return () => preference.removeEventListener("change", onChange);
+}
+
+function getScrollAnimationMode(): ScrollAnimationMode {
+  if (typeof Element.prototype.animate !== "function") return "disabled";
+  return window.matchMedia(reducedMotionQuery).matches ? "reduced" : "full";
+}
+
+// Keep the server markup static, then enable native bindings after hydration.
+const serverAnimationMode = (): ScrollAnimationMode => "disabled";
+
+type ScrollSceneName =
+  | "hero"
+  | "marquee"
+  | "solutions"
+  | "sectors"
+  | "demos"
+  | "gallery"
+  | "principles"
+  | "about"
+  | "contact"
+  | "footer";
+
+const sceneTracks: Record<
+  ScrollSceneName,
+  {
+    y: number[];
+    scale: number[];
+    opacity: number[];
+  }
+> = {
+  hero: {
+    y: [0, -24, -72],
+    scale: [1, 0.98, 0.94],
+    opacity: [1, 0.96, 0.76],
+  },
+  marquee: {
+    y: [8, 0, -8],
+    scale: [1, 1, 1],
+    opacity: [1, 1, 1],
+  },
+  solutions: {
+    y: [42, 0, -26],
+    scale: [0.99, 1, 0.99],
+    opacity: [1, 1, 1],
+  },
+  sectors: {
+    y: [-24, 0, 28],
+    scale: [0.99, 1, 0.99],
+    opacity: [1, 1, 1],
+  },
+  demos: {
+    y: [34, 0, -24],
+    scale: [0.99, 1, 0.99],
+    opacity: [1, 1, 1],
+  },
+  gallery: {
+    y: [26, 0, -22],
+    scale: [0.995, 1, 0.995],
+    opacity: [1, 1, 1],
+  },
+  principles: {
+    y: [20, 0, -18],
+    scale: [0.995, 1, 0.995],
+    opacity: [1, 1, 1],
+  },
+  about: {
+    y: [22, 0, -14],
+    scale: [0.995, 1, 1],
+    opacity: [1, 1, 1],
+  },
+  contact: {
+    y: [14, 0, -8],
+    scale: [0.995, 1, 1],
+    opacity: [1, 1, 1],
+  },
+  footer: {
+    y: [8, 0, -4],
+    scale: [1, 1, 1],
+    opacity: [1, 1, 1],
+  },
+};
+
+const sceneProgress = [0, 0.5, 1];
+
+export function ScrollScene({
+  children,
+  scene,
+}: {
+  children: ReactNode;
+  scene: ScrollSceneName;
+}) {
+  const target = useRef<HTMLDivElement>(null);
+  const mode = useContext(ScrollAnimationContext);
+  const canAnimate = mode !== "disabled";
+  const { scrollYProgress } = useScroll({
+    target,
+    offset:
+      scene === "hero"
+        ? ["start start", "end start"]
+        : ["start end", "end start"],
+  });
+  const track = sceneTracks[scene];
+  const y = useTransform(scrollYProgress, sceneProgress, track.y);
+  const gentleY = useTransform(
+    scrollYProgress,
+    sceneProgress,
+    track.y.map((value) => value * 0.35),
+  );
+  const scale = useTransform(scrollYProgress, sceneProgress, track.scale);
+  const opacity = useTransform(scrollYProgress, sceneProgress, track.opacity);
+  return (
+    <motion.div
+      ref={target}
+      className={`scroll-scene scroll-scene-${scene}`}
+      style={{
+        y: canAnimate ? (mode === "reduced" ? gentleY : y) : 0,
+        scale: mode === "full" ? scale : 1,
+        opacity: mode === "full" ? opacity : 1,
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 const landingTargets = [
   ".section-heading",
@@ -25,6 +166,9 @@ export const demoScrollTargets = [
   ".demo-receipt",
   ".demo-pet-record",
   ".demo-orders > h3",
+  ".demo-sales-history",
+  ".demo-reminder",
+  ".demo-return-history",
 ].join(",");
 
 export function ScrollMotion({
@@ -35,38 +179,12 @@ export function ScrollMotion({
   selector?: string;
 }) {
   const root = useRef<HTMLDivElement>(null);
-  const progress = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const bar = progress.current;
-    if (!bar) return;
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      const distance =
-        document.documentElement.scrollHeight - window.innerHeight;
-      const fraction =
-        distance > 0 ? Math.min(1, Math.max(0, window.scrollY / distance)) : 0;
-      bar.style.transform = `scaleX(${fraction})`;
-    };
-    const schedule = () => {
-      if (!frame) frame = requestAnimationFrame(update);
-    };
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
-    const resize =
-      typeof ResizeObserver === "undefined"
-        ? null
-        : new ResizeObserver(schedule);
-    resize?.observe(document.body);
-    update();
-    return () => {
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-      resize?.disconnect();
-      cancelAnimationFrame(frame);
-    };
-  }, []);
+  const mode = useSyncExternalStore(
+    subscribeToMotionPreference,
+    getScrollAnimationMode,
+    serverAnimationMode,
+  );
+  const { scrollYProgress } = useScroll({ trackContentSize: true });
 
   useEffect(() => {
     const container = root.current;
@@ -82,6 +200,7 @@ export function ScrollMotion({
           observer.unobserve(entry.target);
           const element = entry.target as HTMLElement;
           if (typeof element.animate !== "function") continue;
+          if (element.contains(document.activeElement)) continue;
           const heading = element.matches(
             ".section-heading, .principles-top, .about-main, .motion-intro, h3",
           );
@@ -92,12 +211,12 @@ export function ScrollMotion({
           const animation = element.animate(
             [
               {
-                opacity: 0.2,
+                opacity: 0.6,
                 transform: interactive
                   ? "none"
                   : heading
-                    ? "translateY(28px)"
-                    : "translateY(36px) scale(0.975)",
+                    ? "translateY(12px)"
+                    : "translateY(18px) scale(0.99)",
               },
               {
                 opacity: 1,
@@ -106,8 +225,8 @@ export function ScrollMotion({
             ],
             {
               id: "scroll-reveal",
-              duration: 760,
-              delay: Math.min(stagger++ * 85, 170),
+              duration: 520,
+              delay: Math.min(stagger++ * 60, 120),
               easing: "cubic-bezier(0.16, 1, 0.3, 1)",
               fill: "backwards",
             },
@@ -190,9 +309,15 @@ export function ScrollMotion({
   }, [selector]);
 
   return (
-    <div ref={root} className="scroll-motion">
-      <div ref={progress} className="scroll-progress" aria-hidden="true" />
-      {children}
-    </div>
+    <ScrollAnimationContext value={mode}>
+      <div ref={root} className="scroll-motion">
+        <motion.div
+          className="scroll-progress"
+          style={{ scaleX: mode !== "disabled" ? scrollYProgress : 0 }}
+          aria-hidden="true"
+        />
+        {children}
+      </div>
+    </ScrollAnimationContext>
   );
 }

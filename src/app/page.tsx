@@ -11,6 +11,7 @@ import { Contact } from "@/components/landing/contact";
 import { Footer } from "@/components/landing/footer";
 import { AnalyticsEvents } from "@/components/landing/analytics-events";
 import { ScrollMotion } from "@/components/landing/scroll-motion";
+import { HeadingLight } from "@/components/landing/heading-light";
 export default function Home() {
   return (
     <>
@@ -18,7 +19,7 @@ export default function Home() {
       <a className="skip-link" href="#contenido">
         Ir al contenido
       </a>
-      <Header />
+      <Header overHero />
       <ScrollMotion>
         <main id="contenido">
           <Hero />
@@ -31,8 +32,9 @@ export default function Home() {
           <About />
           <Contact />
         </main>
+        <Footer />
       </ScrollMotion>
-      <Footer />
+      <HeadingLight />
     </>
   );
 }

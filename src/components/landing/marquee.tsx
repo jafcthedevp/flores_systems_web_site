@@ -1,3 +1,5 @@
+import { ScrollScene } from "./scroll-motion";
+
 const phrases = [
   { text: "Ideas que pueden tomar forma", color: "sky", mark: "bloom" },
   { text: "Experiencias que conectan", color: "lilac", mark: "connections" },
@@ -69,36 +71,40 @@ function CardMark({ kind }: { kind: (typeof phrases)[number]["mark"] }) {
 export function Marquee() {
   return (
     <div className="motion-surface">
-      <div
-        className="specialties"
-        role="region"
-        aria-label="Ideas de Flores Systems"
-      >
-        <div className="specialties-marquee">
-          <div className="specialties-track">
-            {[0, 1].map((copy) => (
-              <div
-                key={copy}
-                className="specialties-set"
-                aria-hidden={copy === 1 ? true : undefined}
-              >
-                {phrases.map((phrase) => (
-                  <div
-                    className={`specialty-object specialty-object-${phrase.color}`}
-                    key={phrase.text}
-                  >
-                    <div className={`specialty-tile specialty-${phrase.color}`}>
-                      <span className="specialty-edge" aria-hidden="true" />
-                      <strong>{phrase.text}</strong>
-                      <CardMark kind={phrase.mark} />
+      <ScrollScene scene="marquee">
+        <div
+          className="specialties"
+          role="region"
+          aria-label="Ideas de Flores Systems"
+        >
+          <div className="specialties-marquee">
+            <div className="specialties-track">
+              {[0, 1].map((copy) => (
+                <div
+                  key={copy}
+                  className="specialties-set"
+                  aria-hidden={copy === 1 ? true : undefined}
+                >
+                  {phrases.map((phrase) => (
+                    <div
+                      className={`specialty-object specialty-object-${phrase.color}`}
+                      key={phrase.text}
+                    >
+                      <div
+                        className={`specialty-tile specialty-${phrase.color}`}
+                      >
+                        <span className="specialty-edge" aria-hidden="true" />
+                        <strong>{phrase.text}</strong>
+                        <CardMark kind={phrase.mark} />
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ))}
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      </ScrollScene>
     </div>
   );
 }

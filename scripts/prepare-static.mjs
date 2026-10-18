@@ -1,9 +1,7 @@
-import { cp, mkdir } from 'node:fs/promises';
-await mkdir('public', { recursive: true });
-for (const [source, target] of [
-  ['styles.css', 'styles.css'],
-  ['scripts/legacy/script.js', 'script.js'],
-  ['img', 'img'],
-]) {
-  await cp(source, `public/${target}`, { recursive: true });
-}
+import { cp, mkdir } from "node:fs/promises";
+
+const images = new URL("../img/", import.meta.url);
+const publicImages = new URL("../public/img/", import.meta.url);
+
+await mkdir(publicImages, { recursive: true });
+await cp(images, publicImages, { recursive: true });

@@ -124,9 +124,44 @@ test("scroll: movimiento reducido mantiene todo visible y las demos utilizables"
     .toBe(false);
 });
 
+test("scroll: movimiento reducido suaviza el paralaje sin detener la landing", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/");
+  await enter(page, "#sectores .section-heading");
+  const scene = page.locator(".scroll-scene-sectors");
+  const translation = () =>
+    scene.evaluate((node) =>
+      Math.abs(new DOMMatrix(getComputedStyle(node).transform).m42),
+    );
+  await expect.poll(translation).toBeGreaterThan(1);
+  const fullTranslation = await translation();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect.poll(translation).toBeLessThan(fullTranslation * 0.6);
+  await expect.poll(translation).toBeGreaterThan(0.1);
+  await expect(scene).toHaveCSS("opacity", "1");
+  await enter(page, "#contacto");
+  await expect(page.locator(".scroll-scene-contact")).not.toHaveCSS(
+    "transform",
+    "none",
+  );
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await enter(page, "#sectores .section-heading");
+  await expect.poll(translation).toBeGreaterThan(fullTranslation * 0.8);
+  expect(errors).toEqual([]);
+});
+
 test("scroll: la página sigue legible sin la API de animaciones", async ({
   page,
 }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
   await page.addInitScript(() => {
     delete (Element.prototype as Partial<Element>).animate;
   });
@@ -139,4 +174,9 @@ test("scroll: la página sigue legible sin la API de animaciones", async ({
   await expect(page.getByRole("link", { name: "Explorar demo" })).toHaveCount(
     3,
   );
+  await expect(page.locator(".scroll-scene-sectors")).toHaveCSS(
+    "transform",
+    "none",
+  );
+  expect(errors).toEqual([]);
 });

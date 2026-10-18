@@ -17,6 +17,10 @@ test("landing, navegación móvil y movimiento reducido", async ({ page }) => {
       .locator(".specialties-track")
       .evaluate((el) => getComputedStyle(el).animationName),
   ).toBe("specialties-scroll");
+  await expect(page.locator(".specialties-track")).toHaveCSS(
+    "animation-duration",
+    "70s",
+  );
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -26,7 +30,7 @@ test("landing, navegación móvil y movimiento reducido", async ({ page }) => {
     path: "test-results/landing-mobile.png",
     fullPage: true,
   });
-  await page.screenshot({ path: 'test-results/hero-mobile.png' });
+  await page.screenshot({ path: "test-results/hero-mobile.png" });
 });
 test("el formulario valida sin perder datos ni simular éxito", async ({
   page,
@@ -81,7 +85,8 @@ for (const kind of ["tienda", "restaurante"])
       .first()
       .click();
     await expect(page.getByRole("button", { name: /Simular/ })).toBeEnabled();
-    if (kind === "tienda") await page.getByRole("button", { name: "Pago exacto" }).click();
+    if (kind === "tienda")
+      await page.getByRole("button", { name: "Pago exacto" }).click();
     await page.getByRole("button", { name: /Simular/ }).click();
     await expect(page.getByRole("status")).toContainText(
       "Simulación completada",
@@ -94,9 +99,14 @@ test("veterinaria: búsqueda y estado de cita", async ({ page }) => {
   await page.goto("/demos/veterinaria");
   await page.getByLabel("Buscar mascota").fill("Luna");
   await expect(
-    page.getByRole("button", { name: "Marcar atendido" }),
+    page.getByRole("button", { name: "Registrar llegada" }),
   ).toHaveCount(1);
-  await page.getByRole("button", { name: "Marcar atendido" }).click();
+  for (const name of [
+    "Registrar llegada",
+    "Iniciar atención",
+    "Finalizar atención",
+  ])
+    await page.getByRole("button", { name, exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Volver a pendiente" }),
   ).toBeVisible();
@@ -130,5 +140,5 @@ test("escritorio y metadatos para compartir", async ({ page, request }) => {
     path: "test-results/landing-desktop.png",
     fullPage: true,
   });
-  await page.screenshot({ path: 'test-results/hero-desktop.png' });
+  await page.screenshot({ path: "test-results/hero-desktop.png" });
 });
