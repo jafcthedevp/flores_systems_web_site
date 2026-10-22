@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import styles from "./heading-light.module.css";
 
-/** A readable light pass; the hero repeats with a long pause while visible. */
+/** Section headings receive a light pass when they enter the viewport. */
 export function HeadingLight() {
   useEffect(() => {
     if (
@@ -15,7 +15,7 @@ export function HeadingLight() {
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     const contrast = window.matchMedia("(forced-colors: active)");
     const headings = document.querySelectorAll<HTMLElement>(
-      "#contenido h1, #contenido h2",
+      "#contenido h2",
     );
     const active = new Map<HTMLElement, Animation>();
     const restore = (heading: HTMLElement) => {
@@ -52,18 +52,16 @@ export function HeadingLight() {
             lightText ? "#71d5ff" : "#125ef3",
           );
           heading.classList.add(styles.light);
-          const hero = heading.tagName === "H1";
           const animation = heading.animate(
             [
               { backgroundPosition: "150% 0", offset: 0 },
-              { backgroundPosition: "-50% 0", offset: hero ? 0.24 : 1 },
-              ...(hero ? [{ backgroundPosition: "-50% 0", offset: 1 }] : []),
+              { backgroundPosition: "-50% 0", offset: 1 },
             ],
             {
               id: "heading-light",
-              delay: hero ? 1100 : 560,
-              duration: hero ? 12000 : 2800,
-              iterations: hero ? Infinity : 1,
+              delay: 560,
+              duration: 2800,
+              iterations: 1,
               easing: "linear",
             },
           );

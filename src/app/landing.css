@@ -261,8 +261,16 @@ img { display: block; max-width: 100%; }
 @keyframes orb-two { from { transform: translate(20px, -10px) scale(1.08); } to { transform: translate(-28px, 24px) scale(.93); } }
 @keyframes specialties-scroll { to { transform: translateX(-50%); } }
 
+@media (min-width: 801px) {
+  .site-header .brand { gap: .75rem; line-height: 1; }
+  .site-header .brand img { width: 2.75rem; height: 2.75rem; flex: 0 0 2.75rem; }
+  .site-header .brand > span { display: block; line-height: 1.15; }
+  .site-header .site-nav a { display: inline-flex; align-items: center; min-height: 2.75rem; line-height: 1.2; }
+}
+
 @media (min-width: 1600px) {
-  .hero-grid { width: min(100% - 7.5rem, 1520px); }
+  .site-header-hero .header-inner,
+  .site-header-hero + .scroll-motion .wrap { width: min(100% - 7.5rem, 1520px); }
   .hero h1 { font-size: clamp(5.25rem, 5.8vw, 6rem); }
 }
 
