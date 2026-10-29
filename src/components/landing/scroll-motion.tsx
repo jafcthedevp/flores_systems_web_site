@@ -10,19 +10,15 @@ import {
 } from "react";
 import { motion, useScroll, useTransform } from "motion/react";
 
-type ScrollAnimationMode = "disabled" | "reduced" | "full";
+type ScrollAnimationMode = "disabled" | "full";
 const ScrollAnimationContext = createContext<ScrollAnimationMode>("disabled");
-const reducedMotionQuery = "(prefers-reduced-motion: reduce)";
-
-function subscribeToMotionPreference(onChange: () => void) {
-  const preference = window.matchMedia(reducedMotionQuery);
-  preference.addEventListener("change", onChange);
-  return () => preference.removeEventListener("change", onChange);
+function subscribeToAnimationMode() {
+  return () => {};
 }
 
 function getScrollAnimationMode(): ScrollAnimationMode {
   if (typeof Element.prototype.animate !== "function") return "disabled";
-  return window.matchMedia(reducedMotionQuery).matches ? "reduced" : "full";
+  return "full";
 }
 
 // Keep the server markup static, then enable native bindings after hydration.
@@ -121,11 +117,6 @@ export function ScrollScene({
   });
   const track = sceneTracks[scene];
   const y = useTransform(scrollYProgress, sceneProgress, track.y);
-  const gentleY = useTransform(
-    scrollYProgress,
-    sceneProgress,
-    track.y.map((value) => value * 0.35),
-  );
   const scale = useTransform(scrollYProgress, sceneProgress, track.scale);
   const opacity = useTransform(scrollYProgress, sceneProgress, track.opacity);
   return (
@@ -133,7 +124,7 @@ export function ScrollScene({
       ref={target}
       className={`scroll-scene scroll-scene-${scene}`}
       style={{
-        y: canAnimate ? (mode === "reduced" ? gentleY : y) : 0,
+        y: canAnimate ? y : 0,
         scale: mode === "full" ? scale : 1,
         opacity: mode === "full" ? opacity : 1,
       }}
@@ -180,7 +171,7 @@ export function ScrollMotion({
 }) {
   const root = useRef<HTMLDivElement>(null);
   const mode = useSyncExternalStore(
-    subscribeToMotionPreference,
+    subscribeToAnimationMode,
     getScrollAnimationMode,
     serverAnimationMode,
   );
@@ -189,14 +180,13 @@ export function ScrollMotion({
   useEffect(() => {
     const container = root.current;
     if (!container || typeof IntersectionObserver === "undefined") return;
-    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     const observed = new WeakSet<Element>();
     const active = new Map<HTMLElement, Animation>();
     const observer = new IntersectionObserver(
       (entries) => {
         let stagger = 0;
         for (const entry of entries) {
-          if (!entry.isIntersecting || preference.matches) continue;
+          if (!entry.isIntersecting) continue;
           observer.unobserve(entry.target);
           const element = entry.target as HTMLElement;
           if (typeof element.animate !== "function") continue;
@@ -242,7 +232,6 @@ export function ScrollMotion({
     );
 
     const discover = (node: Element) => {
-      if (preference.matches) return;
       const targets = [
         ...(node.matches(selector) ? [node] : []),
         ...node.querySelectorAll(selector),
@@ -279,31 +268,16 @@ export function ScrollMotion({
       }
     });
     mutations.observe(container, { childList: true, subtree: true });
-    const changePreference = () => {
-      if (preference.matches) {
-        observer.disconnect();
-        active.forEach((animation) => animation.cancel());
-        active.clear();
-      } else {
-        // Also register content inserted while reduced motion was enabled.
-        container.querySelectorAll(selector).forEach((element) => {
-          observed.delete(element);
-        });
-        discover(container);
-      }
-    };
     const focus = (event: FocusEvent) => {
       if (!(event.target instanceof Node)) return;
       for (const [element, animation] of active)
         if (element.contains(event.target)) animation.cancel();
     };
-    preference.addEventListener("change", changePreference);
     container.addEventListener("focusin", focus);
     return () => {
       observer.disconnect();
       mutations.disconnect();
       active.forEach((animation) => animation.cancel());
-      preference.removeEventListener("change", changePreference);
       container.removeEventListener("focusin", focus);
     };
   }, [selector]);

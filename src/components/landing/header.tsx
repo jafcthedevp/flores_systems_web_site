@@ -17,9 +17,7 @@ function scrollToSection(id: string) {
   }
   target.focus({ preventScroll: true });
   target.scrollIntoView({
-    behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
-      ? "instant"
-      : "smooth",
+    behavior: "smooth",
     block: "start",
   });
   return true;
@@ -142,12 +140,9 @@ export function Header({ overHero = false }: { overHero?: boolean }) {
             href="/#sectores"
             onNavigate={(event) => navigateToSection(event, "sectores")}
           >
-            Sectores
+            Posibilidades
           </Link>
-          <Link
-            href="/#demos"
-            onNavigate={(event) => navigateToSection(event, "demos")}
-          >
+          <Link href="/demos">
             Demos
           </Link>
           <Link

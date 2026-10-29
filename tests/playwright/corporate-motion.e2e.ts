@@ -32,49 +32,17 @@ for (const width of [1440, 390]) {
     await expect(
       page.locator(".water-journey, .water-lit-heading, canvas"),
     ).toHaveCount(0);
-    const hero = page.locator("#hero-title");
-    const text = await hero.textContent();
-    await pauseLight(hero);
-    await expect(hero).toHaveCSS("background-image", /linear-gradient/);
-    expect(
-      await hero.evaluate((node) =>
-        parseFloat(getComputedStyle(node).backgroundPosition),
-      ),
-    ).toBeCloseTo(50, 0);
-    // The hero remains discoverable after the initial pass; its next pass has
-    // the same position and follows a long interval without a visible sheen.
-    await hero.evaluate((node) => {
-      const animation = node
-        .getAnimations()
-        .find((item) => item.id === "heading-light")!;
-      const timing = animation.effect!.getTiming();
-      animation.currentTime =
-        Number(timing.delay) + Number(timing.duration) * 1.12;
-    });
-    expect(
-      await hero.evaluate((node) =>
-        parseFloat(getComputedStyle(node).backgroundPosition),
-      ),
-    ).toBeCloseTo(50, 0);
-    const before = await hero.boundingBox();
-    await page.screenshot({ path: `test-results/corporate-hero-${width}.png` });
-    await hero.evaluate((node) =>
-      node
-        .getAnimations()
-        .find((item) => item.id === "heading-light")!
-        .cancel(),
-    );
-    await expect(hero).toHaveCSS("background-image", "none");
-    await expect(hero).toHaveText(text!);
-    expect((await hero.boundingBox())!.height).toBeCloseTo(before!.height, 1);
-    await expect(page.locator(".hero-actions a").first()).toHaveCSS(
-      "-webkit-text-fill-color",
-      /^rgb\(/,
-    );
-
     const title = page.locator("#solutions-title");
     await title.scrollIntoViewIfNeeded();
+    const text = await title.textContent();
     await pauseLight(title);
+    await expect(title).toHaveCSS("background-image", /linear-gradient/);
+    expect(
+      await title.evaluate((node) =>
+        parseFloat(getComputedStyle(node).backgroundPosition),
+      ),
+    ).toBeCloseTo(50, 0);
+    const before = await title.boundingBox();
     await page.screenshot({
       path: `test-results/corporate-section-${width}.png`,
     });
@@ -85,6 +53,8 @@ for (const width of [1440, 390]) {
         .finish(),
     );
     await expect(title).toHaveCSS("background-image", "none");
+    await expect(title).toHaveText(text!);
+    expect((await title.boundingBox())!.height).toBeCloseTo(before!.height, 1);
     await page.locator("#contacto h2").scrollIntoViewIfNeeded();
     await title.scrollIntoViewIfNeeded();
     await expect.poll(() => hasLight(title)).toBe(true);
@@ -97,20 +67,19 @@ for (const width of [1440, 390]) {
   });
 }
 
-test("movimiento corporativo: cancela la luz al reducir movimiento o activar alto contraste", async ({
+test("movimiento corporativo: conserva la luz con cualquier preferencia y la cancela en alto contraste", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  const hero = page.locator("#hero-title");
-  await expect(hero).toBeVisible();
-  await expect(hero).toHaveCSS("background-image", "none");
+  const hero = page.locator("#solutions-title");
+  await hero.scrollIntoViewIfNeeded();
+  await pauseLight(hero);
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await pauseLight(hero);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await expect.poll(() => hasLight(hero)).toBe(false);
-  await expect(hero).toHaveCSS("-webkit-text-fill-color", /^rgb\(/);
-  await expect(hero).toHaveCSS("background-image", "none");
+  await expect.poll(() => hasLight(hero)).toBe(true);
+  await expect(hero).toHaveCSS("background-image", /linear-gradient/);
   await page.emulateMedia({ reducedMotion: "no-preference" });
   const title = page.locator("#solutions-title");
   await title.scrollIntoViewIfNeeded();
@@ -131,8 +100,8 @@ test("movimiento corporativo: el título principal se revela por líneas", async
     .locator("#hero-title .hero-title-line > span")
     .evaluateAll((nodes) =>
       nodes.map((node) => ({
-        name: getComputedStyle(node).animationName,
-        delay: getComputedStyle(node).animationDelay,
+        name: getComputedStyle(node).animationName.split(",")[0].trim(),
+        delay: getComputedStyle(node).animationDelay.split(",")[0].trim(),
       })),
     );
   expect(delays).toEqual([
@@ -143,8 +112,7 @@ test("movimiento corporativo: el título principal se revela por líneas", async
   for (const line of await page
     .locator("#hero-title .hero-title-line > span")
     .all()) {
-    await expect(line).toHaveCSS("animation-name", "none");
-    await expect(line).toHaveCSS("transform", "none");
+    await expect(line).toHaveCSS("animation-name", /title-line-enter/);
   }
 });
 
@@ -163,6 +131,7 @@ test("movimiento corporativo: conserva el contenido sin Web Animations", async (
     "none",
   );
   await page.getByRole("link", { name: "Ver las demos" }).click();
-  await expect(page.locator("#demos h2")).toBeInViewport();
+  await expect(page).toHaveURL(/\/demos$/);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   expect(errors).toEqual([]);
 });

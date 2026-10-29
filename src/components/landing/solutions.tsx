@@ -1,115 +1,97 @@
+﻿import Link from "next/link";
 import { ScrollScene } from "./scroll-motion";
+import { IntegrationBadges } from "./integration-badges";
 
 export function Solutions() {
   return (
     <section
-      className="solutions section-pad"
+      className="solutions section-pad services-editorial"
       id="soluciones"
       aria-labelledby="solutions-title"
     >
       <ScrollScene scene="solutions">
         <div className="wrap">
-          <div className="section-heading solutions-heading">
-            <p className="section-intro">Lo que podemos crear</p>
+          <div className="section-heading services-heading">
             <h2 id="solutions-title">
-              Un sistema para avanzar.
+              Que todo funcione.
               <br />
-              Un sitio para destacar.
+              Que se sienta tuyo.
             </h2>
             <p>
-              Dos necesidades distintas, una misma intención: hacer que la
-              tecnología trabaje a favor de tu negocio.
+              Tu negocio necesita herramientas que simplifiquen el día y una
+              presencia digital que lo represente. Diseñamos ambas alrededor de
+              ti.
             </p>
           </div>
-
-          <div className="solutions-grid">
-            <article className="solution solution-system">
-              <div className="solution-copy">
-                <span className="solution-tag">Organiza tu operación</span>
+          <div className="services-pair">
+            <article className="solution service-panel service-operations">
+              <div className="service-art service-flow" aria-hidden="true">
+                <span>Menos vueltas.</span>
+                <strong>
+                  Más
+                  <br />
+                  claridad.
+                </strong>
+                <div className="service-flow-path">
+                  <i />
+                  <i />
+                  <i />
+                </div>
+              </div>
+              <div className="service-content">
+                <span className="service-category">Para tu equipo</span>
                 <h3>Sistemas administrativos</h3>
                 <p>
-                  Reúne procesos, registros y tareas en una interfaz clara para
-                  tu equipo.
+                  Conecta lo que hoy está disperso. Ventas, inventario, citas y
+                  seguimiento en un espacio pensado para tu operación.
                 </p>
-                <ul className="feature-list">
-                  <li>Paneles fáciles de entender</li>
-                  <li>Información en un solo lugar</li>
-                  <li>Flujos pensados para tu día a día</li>
+                <ul>
+                  <li>Información a mano</li>
+                  <li>Procesos conectados</li>
+                  <li>Control del día a día</li>
                 </ul>
-              </div>
-              <div className="dashboard-preview" aria-hidden="true">
-                <div className="dashboard-top">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                  <small>Resumen del negocio</small>
-                </div>
-                <div className="dashboard-body">
-                  <div className="dashboard-side">
-                    <i></i>
-                    <i></i>
-                    <i></i>
-                    <i></i>
-                  </div>
-                  <div className="dashboard-main">
-                    <div className="dashboard-greeting">
-                      Buen día, equipo <b>↗</b>
-                    </div>
-                    <div className="metric-row">
-                      <span>
-                        <small>Clientes</small>
-                        <strong>Activos</strong>
-                      </span>
-                      <span>
-                        <small>Procesos</small>
-                        <strong>En orden</strong>
-                      </span>
-                    </div>
-                    <div className="chart">
-                      <i></i>
-                      <i></i>
-                      <i></i>
-                      <i></i>
-                      <i></i>
-                      <i></i>
-                      <i></i>
-                      <i></i>
-                    </div>
-                  </div>
-                </div>
+                <Link href="/#contacto">
+                  Hablemos de tu sistema <span aria-hidden="true">↗</span>
+                </Link>
               </div>
             </article>
-
-            <article className="solution solution-creative">
-              <div className="solution-copy">
-                <span className="solution-tag">Haz visible tu esencia</span>
+            <article className="solution service-panel service-presence">
+              <div
+                className="service-art service-expression"
+                aria-hidden="true"
+              >
+                <span>Una presencia propia.</span>
+                <strong>
+                  Imposible
+                  <br />
+                  pasar de largo.
+                </strong>
+                <i />
+              </div>
+              <div className="service-content">
+                <span className="service-category">Para tus clientes</span>
                 <h3>Sitios web creativos</h3>
                 <p>
-                  Una presencia digital con identidad, navegación sencilla y
-                  detalles que invitan a explorar.
+                  Haz que el primer encuentro cuente. Identidad, contenido y
+                  movimiento para que conozcan tu negocio y quieran dar el
+                  siguiente paso.
                 </p>
-                <ul className="feature-list">
-                  <li>Diseño adaptable a cada pantalla</li>
-                  <li>Animaciones que cuentan algo</li>
-                  <li>Contenido fácil de recorrer</li>
+                <ul>
+                  <li>Identidad visual</li>
+                  <li>Navegación intuitiva</li>
+                  <li>Diseño en movimiento</li>
                 </ul>
-              </div>
-              <div className="creative-preview" aria-hidden="true">
-                <div className="creative-orb"></div>
-                <span className="creative-preview-label">
-                  Vista conceptual / Spa
-                </span>
-                <span className="creative-preview-title">
-                  Un momento
-                  <br />
-                  para ti.
-                </span>
-                <span className="creative-preview-link">
-                  Descubre el espacio ↗
-                </span>
+                <Link href="/#contacto">
+                  Hablemos de tu web <span aria-hidden="true">↗</span>
+                </Link>
               </div>
             </article>
           </div>
+          <p className="services-note">
+            Pueden crecer por separado. Juntos, conectan lo que muestras con lo
+            que haces.
+          </p>
+          <IntegrationBadges />
         </div>
       </ScrollScene>
     </section>

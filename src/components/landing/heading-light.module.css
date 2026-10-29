@@ -16,7 +16,7 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce), (forced-colors: active), print {
+@media (forced-colors: active), print {
   .light {
     background-image: none;
     -webkit-text-fill-color: currentColor;

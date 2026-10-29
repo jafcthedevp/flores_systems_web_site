@@ -12,7 +12,6 @@ export function HeadingLight() {
     )
       return;
 
-    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     const contrast = window.matchMedia("(forced-colors: active)");
     const headings = document.querySelectorAll<HTMLElement>(
       "#contenido h2",
@@ -31,7 +30,7 @@ export function HeadingLight() {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (preference.matches || contrast.matches) return;
+        if (contrast.matches) return;
         for (const entry of entries) {
           const heading = entry.target as HTMLElement;
           if (!entry.isIntersecting || entry.intersectionRatio < 0.3) {
@@ -81,19 +80,17 @@ export function HeadingLight() {
 
     const sync = () => {
       observer.disconnect();
-      if (preference.matches || contrast.matches) {
+      if (contrast.matches) {
         for (const heading of active.keys()) stop(heading);
       } else {
         for (const heading of headings) observer.observe(heading);
       }
     };
-    preference.addEventListener("change", sync);
     contrast.addEventListener("change", sync);
     sync();
     return () => {
       observer.disconnect();
       for (const heading of active.keys()) stop(heading);
-      preference.removeEventListener("change", sync);
       contrast.removeEventListener("change", sync);
     };
   }, []);

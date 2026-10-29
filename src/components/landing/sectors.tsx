@@ -1,123 +1,78 @@
-import { ScrollScene } from "./scroll-motion";
+﻿import { ScrollScene } from "./scroll-motion";
+
+const possibilities = [
+  [
+    "Organizar tu operación",
+    "Más claridad para lo que ocurre cada día.",
+    "Procesos",
+    "Información",
+    "Control",
+  ],
+  [
+    "Conectar a tu equipo",
+    "Un mismo espacio para trabajar con información compartida.",
+    "Coordinación",
+    "Tareas",
+    "Comunicación",
+  ],
+  [
+    "Dar seguimiento a lo importante",
+    "Cada pendiente y cada avance, fáciles de encontrar.",
+    "Registros",
+    "Recordatorios",
+    "Seguimiento",
+  ],
+  [
+    "Hacer visible tu marca",
+    "Una presencia digital que expresa lo que te hace diferente.",
+    "Identidad",
+    "Contenido",
+    "Experiencia",
+  ],
+  [
+    "Simplificar la atención",
+    "Un recorrido más claro desde el primer contacto.",
+    "Consultas",
+    "Solicitudes",
+    "Respuestas",
+  ],
+];
 
 export function Sectors() {
   return (
     <section
-      className="sectors section-pad"
+      className="sectors section-pad sectors-editorial"
       id="sectores"
       aria-labelledby="sectors-title"
     >
       <ScrollScene scene="sectors">
-        <div className="wrap">
+        <div className="wrap sectors-layout">
           <div className="section-heading sectors-heading">
-            <p className="section-intro">Ideas por sector</p>
             <h2 id="sectors-title">
-              Tu negocio tiene una forma propia de crecer.
+              Lo que necesitas,
+              <br />a tu manera.
             </h2>
             <p>
-              Estas son muestras conceptuales para imaginar lo que podemos
-              construir juntos; no representan proyectos entregados a clientes.
+              Partimos de tus objetivos y de tu forma de trabajar. Desde ahí,
+              diseñamos una solución que tenga sentido para ti, tu equipo y tus
+              clientes.
             </p>
+            <a href="#contacto" className="sectors-contact">
+              Cuéntanos qué tienes en mente <span aria-hidden="true">↗</span>
+            </a>
           </div>
-
-          <div className="sector-grid">
-            <article className="sector sector-vet">
-              <div className="sector-copy">
-                <span className="sector-type">Sistema + sitio web</span>
-                <h3>Restaurantes</h3>
-                <p>Carta digital, pedidos y una operación más clara.</p>
-              </div>
-              <div className="sector-art school-art" aria-hidden="true">
-                <span>Carta del día</span>
-                <i />
-                <i />
-                <i />
-              </div>
-            </article>
-            <article className="sector sector-vet">
-              <div className="sector-copy">
-                <span className="sector-type">Sistema administrativo</span>
-                <h3>Abarrotes y bodegas</h3>
-                <p>Productos, stock y ventas fáciles de consultar.</p>
-              </div>
-              <div className="sector-art vet-art" aria-hidden="true">
-                <span className="vet-card">
-                  Inventario <b>En orden</b>
-                </span>
-              </div>
-            </article>
-            <article className="sector sector-school">
-              <div className="sector-copy">
-                <span className="sector-type">Sistema + sitio web</span>
-                <h3>Mercados y puestos</h3>
-                <p>Un registro claro para el movimiento de cada día.</p>
-              </div>
-              <div className="sector-art school-art" aria-hidden="true">
-                <span>Ventas del día</span>
-                <i />
-                <i />
-                <i />
-              </div>
-            </article>
-            <article className="sector sector-vet">
-              <div className="sector-copy">
-                <span className="sector-type">Sistema + sitio web</span>
-                <h3>Veterinarias</h3>
-                <p>Agenda, fichas y seguimiento sin perder el trato cercano.</p>
-              </div>
-              <div className="sector-art vet-art" aria-hidden="true">
-                <span className="vet-plus">+</span>
-                <span className="vet-card">
-                  Próxima cita <b>09:30</b>
-                </span>
-              </div>
-            </article>
-            <article className="sector sector-spa">
-              <div className="sector-copy">
-                <span className="sector-type">Sitio creativo</span>
-                <h3>Spas</h3>
-                <p>
-                  Una experiencia digital que transmite calma desde el primer
-                  vistazo.
-                </p>
-              </div>
-              <div className="sector-art spa-art" aria-hidden="true">
-                <span>pausa</span>
-                <i></i>
-              </div>
-            </article>
-            <article className="sector sector-school">
-              <div className="sector-copy">
-                <span className="sector-type">Sistema administrativo</span>
-                <h3>Colegios</h3>
-                <p>Información organizada para docentes, equipos y familias.</p>
-              </div>
-              <div className="sector-art school-art" aria-hidden="true">
-                <span>Calendario</span>
-                <i></i>
-                <i></i>
-                <i></i>
-                <i></i>
-                <i></i>
-              </div>
-            </article>
-            <article className="sector sector-fashion">
-              <div className="sector-copy">
-                <span className="sector-type">Sitio creativo</span>
-                <h3>Tiendas de ropa</h3>
-                <p>
-                  Colecciones con ritmo visual y una vitrina que se recuerda.
-                </p>
-              </div>
-              <div className="sector-art fashion-art" aria-hidden="true">
-                <span>
-                  Nueva
-                  <br />
-                  mirada.
-                </span>
-                <i></i>
-              </div>
-            </article>
+          <div className="sector-directory">
+            {possibilities.map(([name, description, ...capabilities]) => (
+              <article className="sector sector-directory-row" key={name}>
+                <h3>{name}</h3>
+                <p>{description}</p>
+                <ul aria-label={`Ideas para ${name.toLowerCase()}`}>
+                  {capabilities.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </article>
+            ))}
           </div>
         </div>
       </ScrollScene>

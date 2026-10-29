@@ -6,7 +6,7 @@ import { Sectors } from "@/components/landing/sectors";
 import { Principles } from "@/components/landing/principles";
 import { About } from "@/components/landing/about";
 import { MotionContent } from "@/components/landing/motion-content";
-import { DemoLinks } from "@/components/demos/demo-links";
+import { DemoInvitation } from "@/components/landing/demo-invitation";
 import { Contact } from "@/components/landing/contact";
 import { Footer } from "@/components/landing/footer";
 import { AnalyticsEvents } from "@/components/landing/analytics-events";
@@ -26,7 +26,7 @@ export default function Home() {
           <Marquee />
           <Solutions />
           <Sectors />
-          <DemoLinks />
+          <DemoInvitation />
           <MotionContent />
           <Principles />
           <About />

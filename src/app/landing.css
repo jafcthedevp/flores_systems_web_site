@@ -371,10 +371,3 @@ img { display: block; max-width: 100%; }
   .footer-inner { display: grid; gap: .5rem; }
   .footer-inner p, .footer-inner > span { margin: 0; }
 }
-
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after { transition-duration: .15s !important; }
-  .hero-copy, .hero-rose { animation: gentle-enter .7s both; }
-}
-@keyframes gentle-enter { from { opacity: .7; } to { opacity: 1; } }

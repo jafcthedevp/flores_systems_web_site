@@ -3,5 +3,5 @@ import motionConfig from "./playwright.motion.config";
 
 export default defineConfig({
   ...motionConfig,
-  testMatch: "**/demos.e2e.ts",
+  testMatch: ["**/demos.e2e.ts", "**/showcase.e2e.ts"],
 });

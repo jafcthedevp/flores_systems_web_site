@@ -45,7 +45,8 @@ for (const width of [1440, 390]) {
       y: new DOMMatrix(getComputedStyle(node).transform).m42,
     }));
     expect(sample.opacity).toBeLessThan(1);
-    expect(sample.y).toBeGreaterThan(0);
+    // Headings with links keep their controls stationary during the reveal.
+    expect(sample.y).toBe(0);
     await expect.poll(() => isRevealing(heading)).toBe(false);
     await expect(heading).toHaveCSS("opacity", "1");
     await enter(page, "#contacto");
@@ -81,7 +82,9 @@ test("scroll: los nuevos pedidos se animan y conservan sus controles", async ({
   await page.getByRole("button", { name: "Agregar Lomo saltado" }).click();
   await page.getByRole("button", { name: "Simular pedido" }).click();
   const order = page.getByRole("article", { name: "Pedido 001", exact: true });
-  await enter(page, ".demo-orders article");
+  await order.evaluate((element) =>
+    element.scrollIntoView({ behavior: "instant", block: "center" }),
+  );
   await expect.poll(() => isRevealing(order)).toBe(true);
   await order.getByRole("button", { name: "Pasar a cocina" }).focus();
   await expect.poll(() => isRevealing(order)).toBe(false);
@@ -90,41 +93,29 @@ test("scroll: los nuevos pedidos se animan y conservan sus controles", async ({
   await expect(order).toContainText("En cocina");
 });
 
-test("scroll: movimiento reducido mantiene todo visible y las demos utilizables", async ({
+test("scroll: las demos siguen utilizables con cualquier preferencia de movimiento", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/demos/veterinaria");
   await page.getByRole("button", { name: "Ver ficha de Luna" }).click();
   await enter(page, ".demo-pet-record");
-  expect(await isRevealing(page.locator(".demo-pet-record"))).toBe(false);
   await expect(page.locator(".demo-pet-record")).toHaveCSS("opacity", "1");
   await page
     .getByLabel("Nota de prueba")
     .fill("Una nota con movimiento reducido.");
   await page.getByRole("button", { name: "Agregar nota a la ficha" }).click();
   await expect(page.getByRole("status")).toContainText("Nota añadida");
-  // Changing the preference while visiting the page also enables the observer.
+  // Preference changes keep the same interaction behavior.
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await enter(page, ".demo-appointments");
-  await expect
-    .poll(() =>
-      isRevealing(
-        page.getByRole("article", { name: "Cita de Luna", exact: true }),
-      ),
-    )
-    .toBe(true);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await expect
-    .poll(() =>
-      isRevealing(
-        page.getByRole("article", { name: "Cita de Luna", exact: true }),
-      ),
-    )
-    .toBe(false);
+  await expect(
+    page.getByRole("article", { name: "Cita de Luna", exact: true }),
+  ).toBeVisible();
 });
 
-test("scroll: movimiento reducido suaviza el paralaje sin detener la landing", async ({
+test("scroll: cambiar la preferencia conserva la intensidad del paralaje", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -138,19 +129,13 @@ test("scroll: movimiento reducido suaviza el paralaje sin detener la landing", a
       Math.abs(new DOMMatrix(getComputedStyle(node).transform).m42),
     );
   await expect.poll(translation).toBeGreaterThan(1);
+  await scene.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
   const fullTranslation = await translation();
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await expect.poll(translation).toBeLessThan(fullTranslation * 0.6);
-  await expect.poll(translation).toBeGreaterThan(0.1);
+  await expect.poll(translation).toBeCloseTo(fullTranslation, 0);
   await expect(scene).toHaveCSS("opacity", "1");
-  await enter(page, "#contacto");
-  await expect(page.locator(".scroll-scene-contact")).not.toHaveCSS(
-    "transform",
-    "none",
-  );
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await enter(page, "#sectores .section-heading");
-  await expect.poll(translation).toBeGreaterThan(fullTranslation * 0.8);
+  await expect.poll(translation).toBeCloseTo(fullTranslation, 0);
   expect(errors).toEqual([]);
 });
 
@@ -171,9 +156,10 @@ test("scroll: la página sigue legible sin la API de animaciones", async ({
   await expect(heading).toBeVisible();
   await expect(heading).toHaveCSS("opacity", "1");
   await expect(heading).toHaveCSS("transform", "none");
-  await expect(page.getByRole("link", { name: "Explorar demo" })).toHaveCount(
-    3,
-  );
+  await expect(
+    page.getByRole("link", { name: "Ir al espacio de demos" }),
+  ).toHaveAttribute("href", "/demos");
+  await expect(page.locator(".product-preview")).toHaveCount(0);
   await expect(page.locator(".scroll-scene-sectors")).toHaveCSS(
     "transform",
     "none",

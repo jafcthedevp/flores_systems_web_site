@@ -31,13 +31,13 @@ export default async function Demo({
     <>
       <Header />
       <main className="wrap demo-page">
-        <Link href="/#demos">Volver a las demos</Link>
+        <Link href="/demos">Volver a las demos</Link>
         <h1>{titles[kind as keyof typeof titles]}</h1>
         <p className="notice">
           Demostración de Flores Systems. Todos los datos son ficticios; las
           acciones se reinician al recargar.
         </p>
-        <BusinessDemo kind={kind as keyof typeof titles} />
+        <BusinessDemo key={kind} kind={kind as keyof typeof titles} />
         <div className="demo-cta">
           <h2>¿Te serviría algo así?</h2>
           <p>Adaptamos la propuesta a la forma de trabajar de tu negocio.</p>

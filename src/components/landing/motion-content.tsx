@@ -1,5 +1,6 @@
 import { MotionInteractions } from "./motion-interactions";
 import { ScrollScene } from "./scroll-motion";
+import { ResponseInteraction } from "./response-interaction";
 export function MotionContent() {
   return (
     <MotionInteractions>
@@ -12,13 +13,13 @@ export function MotionContent() {
           <div className="motion-intro">
             <p className="section-intro">Galería de movimiento</p>
             <h2 id="motion-title">
-              Pequeños gestos.
+              Una página que
               <br />
-              Grandes sensaciones.
+              se vive al recorrerla.
             </h2>
             <p>
-              Prueba tres formas de dar vida a una página. Cada efecto tiene un
-              motivo: mostrar, ambientar o responder.
+              Profundidad al avanzar. Atmósfera al detenerte. Una respuesta
+              cuando interactúas. El movimiento también cuenta tu historia.
             </p>
           </div>
 
@@ -68,29 +69,14 @@ export function MotionContent() {
               </article>
 
               <article className="motion-demo" data-demo="response">
-                <div className="demo-stage response-stage">
-                  <span className="response-label">
-                    Una respuesta clara a cada acción
-                  </span>
-                  <button
-                    className="try-button"
-                    type="button"
-                    aria-pressed="false"
-                  >
-                    Probar interacción <span aria-hidden="true">↗</span>
-                  </button>
-                  <span
-                    className="response-signal"
-                    role="status"
-                    aria-live="polite"
-                  >
-                    Toca el botón
-                  </span>
-                </div>
+                <ResponseInteraction />
                 <div className="demo-description">
                   <div>
                     <h3>Microinteracción</h3>
-                    <p>Un detalle confirma lo que acaba de pasar.</p>
+                    <p>
+                      Activa la carga y mira cómo el círculo acompaña cada
+                      avance hasta confirmar la acción.
+                    </p>
                   </div>
                 </div>
               </article>

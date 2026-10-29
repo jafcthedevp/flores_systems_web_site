@@ -17,8 +17,8 @@ export function About() {
             <div>
               <h3>Nuestra meta</h3>
               <p>
-                Ayudar a pequeños negocios a trabajar con más orden y a
-                presentarse con una web que refleje su identidad.
+                Ayudar a cada negocio a trabajar con más orden y a presentarse
+                con una web que refleje su identidad.
               </p>
             </div>
             <div>

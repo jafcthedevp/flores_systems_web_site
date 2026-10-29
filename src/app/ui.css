@@ -36,7 +36,7 @@
   from { background-position: 100% 0; }
   to { background-position: 0% 0; }
 }
-@media (min-width: 801px) and (prefers-reduced-motion: no-preference) {
+@media (min-width: 801px) {
   @supports (background-clip: text) or (-webkit-background-clip: text) {
     .hero-title-line > span {
       background-image: linear-gradient(110deg, #f8fbff 30%, #a1e6ff 40%, #32bcff 48%, #6bdcff 54%, #f8fbff 65%);
@@ -51,7 +51,7 @@
   from { transform: translateY(105%); opacity: .25; }
   to { transform: translateY(0); opacity: 1; }
 }
-@media (prefers-reduced-motion: reduce), print {
+@media print {
   .hero-title-line > span { animation: none; }
 }
 @media (forced-colors: active), print {
@@ -129,20 +129,6 @@
 .specialty-lilac::after { animation-delay: -2.25s; }
 .specialty-mint::after { animation-delay: -4.5s; }
 .specialty-rose::after { animation-delay: -6.75s; }
-@media (prefers-reduced-motion: reduce) {
-  .hero-rose img { animation: rose-float-gentle 12s ease-in-out infinite; }
-  .hero-visual::before { animation-duration: 16s; }
-  .specialties-track { animation-duration: 70s; }
-  .specialty-tile::after { animation-duration: 24s; }
-  .motion-demo.is-playing .ambient-orb-one { animation: orb-one-gentle 12s ease-in-out infinite alternate; }
-  .motion-demo.is-playing .ambient-orb-two { animation: orb-two-gentle 12s ease-in-out infinite alternate; }
-  .motion-demo.is-playing .reveal-card-back,
-  .motion-demo.is-playing .reveal-card-mid,
-  .motion-demo.is-playing .reveal-card-front { animation-name: gentle-enter; }
-}
-@keyframes rose-float-gentle { 0%, 100% { transform: translateY(2px); } 50% { transform: translateY(-3px); } }
-@keyframes orb-one-gentle { from { transform: translate(-6px, 4px) scale(.995); } to { transform: translate(7px, -4px) scale(1.02); } }
-@keyframes orb-two-gentle { from { transform: translate(5px, -3px) scale(1.02); } to { transform: translate(-7px, 6px) scale(.995); } }
 @keyframes card-reflection { 0%, 30% { transform: translateX(-28%); opacity: 0; } 45%, 60% { opacity: .6; } 80%, 100% { transform: translateX(28%); opacity: 0; } }
 @media (hover: hover) { .specialty-tile:hover { transform: rotate(0deg) rotateY(0deg) translateY(-5px); box-shadow: 4px 15px 0 #00000022, 0 15px 30px #00000018; } }
 @media (max-width: 560px) {

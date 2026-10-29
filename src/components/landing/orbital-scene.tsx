@@ -22,9 +22,6 @@ export function OrbitalScene({ children }: { children: React.ReactNode }) {
       cameraY = 0;
     let previousTime = performance.now();
     let elapsed = 0;
-    const motionPreference = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    );
     const resize = () => {
       width = scene.clientWidth;
       height = scene.clientHeight;
@@ -42,9 +39,8 @@ export function OrbitalScene({ children }: { children: React.ReactNode }) {
       }
     };
     const paint = () => {
-      const intensity = motionPreference.matches ? 0.35 : 1;
-      cameraX += (pointerX * intensity - cameraX) * 0.045;
-      cameraY += (pointerY * intensity - cameraY) * 0.045;
+      cameraX += (pointerX - cameraX) * 0.045;
+      cameraY += (pointerY - cameraY) * 0.045;
       scene.style.setProperty("--parallax-x", `${(cameraX * 7).toFixed(2)}px`);
       scene.style.setProperty("--parallax-y", `${(cameraY * 5).toFixed(2)}px`);
       for (let index = 0; index < ORBITS.length; index++) {
@@ -58,8 +54,7 @@ export function OrbitalScene({ children }: { children: React.ReactNode }) {
       }
     };
     const tick = (now: number) => {
-      const speed = motionPreference.matches ? 0.35 : 1;
-      elapsed += (Math.min(now - previousTime, 64) / 1000) * speed;
+      elapsed += (Math.min(now - previousTime, 64) / 1000);
       previousTime = now;
       paint();
       frame = requestAnimationFrame(tick);
@@ -103,7 +98,6 @@ export function OrbitalScene({ children }: { children: React.ReactNode }) {
     scene.addEventListener("pointermove", move, { passive: true });
     scene.addEventListener("pointerleave", leave);
     document.addEventListener("visibilitychange", sync);
-    motionPreference.addEventListener("change", sync);
     sync();
     return () => {
       cancelAnimationFrame(frame);
@@ -112,7 +106,6 @@ export function OrbitalScene({ children }: { children: React.ReactNode }) {
       scene.removeEventListener("pointermove", move);
       scene.removeEventListener("pointerleave", leave);
       document.removeEventListener("visibilitychange", sync);
-      motionPreference.removeEventListener("change", sync);
     };
   }, []);
 

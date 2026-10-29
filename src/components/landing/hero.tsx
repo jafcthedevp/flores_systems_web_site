@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import waterBackground from "../../../img/bg_agua.png";
 import { ScrollScene } from "./scroll-motion";
 import { OrbitalScene } from "./orbital-scene";
@@ -38,9 +39,9 @@ export function Hero() {
               <a className="button button-primary" href="#contacto">
                 Solicitar cotización <span aria-hidden="true">↗</span>
               </a>
-              <a className="button button-text" href="#demos">
-                Ver las demos <span aria-hidden="true">↓</span>
-              </a>
+              <Link className="button button-text" href="/demos">
+                Ver las demos <span aria-hidden="true">↗</span>
+              </Link>
             </div>
             <p className="hero-footnote">
               Diseño web · Sistemas administrativos · Experiencias con
