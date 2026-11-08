@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "motion/react";
+import styles from "./demo-gallery.module.css";
+import { WrittenHeading } from "../landing/written-heading";
 
 const concepts = [
   {
@@ -69,7 +71,7 @@ export function DemoLinks() {
   const demo = concepts[selected];
   return (
     <section
-      className="product-theater"
+      className={`${styles.theater} product-theater`}
       id="demos"
       ref={target}
       aria-labelledby="demos-title"
@@ -78,11 +80,11 @@ export function DemoLinks() {
         <div className="theater-heading">
           <div>
             <p>Diseñado para el ritmo de tu negocio</p>
-            <h2 id="demos-title">
+            <WrittenHeading id="demos-title">
               No lo imagines.
               <br />
               Explóralo.
-            </h2>
+            </WrittenHeading>
           </div>
           <p>
             Una interfaz que se entiende. Una operación que fluye. Elige una
@@ -148,7 +150,9 @@ export function DemoLinks() {
               <div className="preview-welcome">
                 <div>
                   <p>Todo listo para empezar</p>
-                  <h3>{view === 0 ? demo.section : demo.nav[view]}</h3>
+                  <WrittenHeading as="h3">
+                    {view === 0 ? demo.section : demo.nav[view]}
+                  </WrittenHeading>
                 </div>
                 <span className="preview-avatar">FS</span>
               </div>
@@ -213,7 +217,7 @@ export function DemoLinks() {
         </motion.div>
         <div className="theater-caption">
           <div>
-            <h3>{demo.title}</h3>
+            <WrittenHeading as="h3">{demo.title}</WrittenHeading>
             <p>{demo.description}</p>
           </div>
           <Link

@@ -1,4 +1,64 @@
 import { expect, test } from "@playwright/test";
+import { openModule } from "./demo-navigation";
+test("el fondo se anima automáticamente al entrar y al regresar a la portada", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/");
+  const video = page.locator("#inicio video");
+  await expect(video).toHaveJSProperty("paused", false);
+  const firstFrame = await video.evaluate(
+    (element: HTMLVideoElement) => element.currentTime,
+  );
+  await expect
+    .poll(() =>
+      video.evaluate((element: HTMLVideoElement) => element.currentTime),
+    )
+    .toBeGreaterThan(firstFrame + 0.2);
+  await expect(page.locator("#inicio button")).toHaveCount(0);
+  await expect(video).toHaveJSProperty("controls", false);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.reload();
+  await expect(video).toHaveJSProperty("paused", false);
+  await page.locator("#contacto").scrollIntoViewIfNeeded();
+  await expect(video).toHaveJSProperty("paused", true);
+  await page.locator("#inicio").scrollIntoViewIfNeeded();
+  await expect(video).toHaveJSProperty("paused", false);
+});
+test("el video vuelve al inicio y sigue avanzando al completar el bucle", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const video = page.locator("#inicio video");
+  await expect(video.locator("source")).toHaveAttribute(
+    "src",
+    "/agentic/hero-loop.mp4",
+  );
+  await expect
+    .poll(() =>
+      video.evaluate((element: HTMLVideoElement) => element.readyState),
+    )
+    .toBeGreaterThanOrEqual(2);
+  await video.evaluate((element: HTMLVideoElement) => {
+    element.currentTime = element.duration - 0.3;
+  });
+  await expect
+    .poll(() =>
+      video.evaluate((element: HTMLVideoElement) => element.currentTime),
+    )
+    .toBeLessThan(1);
+  await expect(video).toHaveJSProperty("paused", false);
+  const afterWrap = await video.evaluate(
+    (element: HTMLVideoElement) => element.currentTime,
+  );
+  await expect
+    .poll(() =>
+      video.evaluate((element: HTMLVideoElement) => element.currentTime),
+    )
+    .toBeGreaterThan(afterWrap + 0.2);
+  await expect(video).toHaveJSProperty("videoWidth", 1920);
+  await expect(video).toHaveJSProperty("videoHeight", 1080);
+});
 test("landing, navegación móvil y movimiento reducido", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -12,15 +72,10 @@ test("landing, navegación móvil y movimiento reducido", async ({ page }) => {
   ).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Abrir menú" })).toBeFocused();
-  expect(
-    await page
-      .locator(".specialties-track")
-      .evaluate((el) => getComputedStyle(el).animationName),
-  ).toBe("specialties-scroll");
-  await expect(page.locator(".specialties-track")).toHaveCSS(
-    "animation-duration",
-    "70s",
-  );
+  await expect(page.locator("#inicio video")).toHaveJSProperty("paused", false);
+  const poster = await page.locator("#inicio video").getAttribute("poster");
+  expect(poster).toBe("/agentic/hero-poster.jpg");
+  expect((await page.request.get(poster!)).ok()).toBe(true);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -80,9 +135,16 @@ test("el formulario valida sin perder datos ni simular éxito", async ({
 for (const kind of ["tienda", "restaurante"])
   test(`demo ${kind}: interacción sin pedido real`, async ({ page }) => {
     await page.goto(`/demos/${kind}`);
+    await openModule(page, kind === "tienda" ? "Punto de venta" : "Carta");
     await page
       .getByRole("button", { name: /Agregar/ })
       .first()
+      .click();
+    await page
+      .getByRole("button", {
+        name: kind === "tienda" ? "Ir a caja" : "Revisar pedido",
+        exact: true,
+      })
       .click();
     await expect(page.getByRole("button", { name: /Simular/ })).toBeEnabled();
     if (kind === "tienda")
@@ -97,6 +159,7 @@ for (const kind of ["tienda", "restaurante"])
   });
 test("veterinaria: búsqueda y estado de cita", async ({ page }) => {
   await page.goto("/demos/veterinaria");
+  await openModule(page, "Agenda");
   await page.getByLabel("Buscar mascota").fill("Luna");
   await expect(
     page.getByRole("button", { name: "Registrar llegada" }),

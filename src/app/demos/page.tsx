@@ -4,6 +4,8 @@ import { Header } from "@/components/landing/header";
 import { Footer } from "@/components/landing/footer";
 import { DemoLinks } from "@/components/demos/demo-links";
 import { AnalyticsEvents } from "@/components/landing/analytics-events";
+import styles from "@/components/demos/demo-gallery.module.css";
+import { WrittenHeading } from "@/components/landing/written-heading";
 
 export const metadata: Metadata = {
   title: "Explora nuestras demos",
@@ -13,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function DemosPage() {
   return (
-    <>
+    <div className={styles.hub}>
       <AnalyticsEvents />
       <a className="skip-link" href="#contenido">
         Ir al contenido
@@ -22,11 +24,11 @@ export default function DemosPage() {
       <main id="contenido" className="demos-hub">
         <div className="wrap demos-hub-intro">
           <Link href="/">Volver a Flores Systems</Link>
-          <h1>
+          <WrittenHeading as="h1">
             Entra. Prueba.
             <br />
             Encuentra posibilidades.
-          </h1>
+          </WrittenHeading>
           <p>
             Explora algunas experiencias de ejemplo. Prueba sus funciones e
             imagina cómo adaptarlas a lo que necesitas. Cada demo muestra una
@@ -44,9 +46,9 @@ export default function DemosPage() {
           aria-labelledby="hub-contact-title"
         >
           <div>
-            <h2 id="hub-contact-title">
+            <WrittenHeading id="hub-contact-title">
               Tu negocio tiene su propia forma de funcionar.
-            </h2>
+            </WrittenHeading>
             <p>
               Estas demos son un punto de partida. Conversemos sobre lo que
               necesitas.
@@ -58,6 +60,6 @@ export default function DemosPage() {
         </section>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }

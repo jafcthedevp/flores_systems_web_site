@@ -103,7 +103,16 @@ export function SalesHistory({
 }) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const selected = sales.find((sale) => sale.id === selectedId) ?? sales.at(-1);
-  if (!selected) return null;
+  if (!selected)
+    return (
+      <div className="demo-sales-history">
+        <h3>Ventas y devoluciones</h3>
+        <p>
+          Las ventas de esta sesión aparecerán aquí. Completa una venta en caja
+          para consultar su detalle y probar una devolución.
+        </p>
+      </div>
+    );
   const refunded = selected.returns.reduce((sum, item) => sum + item.cents, 0);
   return (
     <section

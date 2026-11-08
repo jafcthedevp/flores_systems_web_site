@@ -1,0 +1,254 @@
+.hub {
+  --ink: #222326;
+  --muted: #5f626b;
+  --blue: #525b66;
+  --paper: #f5f4f0;
+  --body: var(--font-agentic), sans-serif;
+  --display: var(--body);
+  background: #f5f4f0;
+  color: #222326;
+  font-family: var(--body);
+}
+.hub :global(.site-header) {
+  background: #f5f4f0bd;
+  border-color: #ffffffa8;
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  box-shadow: inset 0 1px 0 white;
+}
+.hub :global(.brand strong) {
+  color: #505b6a;
+}
+.hub :global(.demos-hub) {
+  background: #f5f4f0;
+  color: #111111;
+}
+.hub :global(.demos-hub-intro > a),
+.hub :global(.demos-hub-intro > p),
+.hub :global(.demos-hub-contact p) {
+  color: #555861;
+}
+.hub :global(.demos-hub-intro h1),
+.hub :global(.demos-hub-contact h2),
+.theater :global(h2),
+.theater :global(h3) {
+  color: #111111;
+}
+.hub :global(.demos-hub-intro h1) {
+  font-weight: 300;
+  letter-spacing: -0.06em;
+}
+.hub :global(.demos-hub-intro) {
+  min-height: calc(100svh - 5.4rem);
+  padding-block: clamp(3rem, 6vh, 5rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.hub :global(.demos-hub-intro > a) {
+  align-self: flex-start;
+}
+.hub :global(.demos-hub-intro nav a) {
+  color: #525862;
+  border: 1px solid white;
+  border-radius: 13px;
+  background: #ffffff8a;
+  box-shadow:
+    inset 0 1px 0 white,
+    0 2px 10px #34303d04;
+}
+.hub :global(.demos-hub-intro nav a:hover) {
+  background: white;
+}
+.hub :global(.demos-hub-contact h2) {
+  font-weight: 300;
+}
+.hub :global(.demos-hub-contact .button-primary) {
+  background: #292b32;
+  color: white;
+  box-shadow: none;
+  border-radius: 13px;
+}
+.hub :global(.site-footer) {
+  background: #f5f4f0;
+}
+.theater {
+  --product-accent: #738d8d;
+  background:
+    radial-gradient(ellipse at 85% 40%, #e4e3ef66, transparent 60%), #f5f4f0;
+  color: #222326;
+  border-top: 1px solid #2222220b;
+  font-family: var(--font-agentic), sans-serif;
+}
+.theater :global(.theater-heading > div > p),
+.theater :global(.theater-heading > p) {
+  color: #5f626b;
+}
+.theater :global(.theater-heading h2) {
+  font-weight: 300;
+}
+.theater :global(.theater-select button) {
+  padding: 13px 20px;
+  border: 1px solid white;
+  border-radius: 13px;
+  background: #ffffff70;
+  color: #5f626b;
+  box-shadow: inset 0 1px 0 white;
+}
+.theater :global(.theater-select button[aria-pressed="true"]) {
+  color: #34353e;
+  background: #ffffffdb;
+  border-color: #fff;
+  box-shadow:
+    0 2px 12px #24242b0a,
+    inset 0 1px 0 white;
+}
+.theater :global(.theater-frame) {
+  border: 1px solid white;
+  border-radius: 22px;
+  background: #f9f9f6;
+  color: #646c79;
+  box-shadow:
+    0 30px 70px #3f3b4d0a,
+    inset 0 1px 0 white;
+}
+.theater :global(.preview-chrome) {
+  background: #ffffff90;
+  color: #5f626b;
+  border-bottom: 1px solid #22222208;
+}
+.theater :global(.preview-chrome i) {
+  background: #c6c5ce;
+}
+.theater :global(.product-preview) {
+  --product-accent: #758f86;
+  color: #5f626b;
+  background:
+    radial-gradient(ellipse at top right, #e4e5f16b, transparent 60%), #f6f6f3;
+}
+.theater :global(.preview-veterinaria) {
+  --product-accent: #a497b6;
+}
+.theater :global(.preview-restaurante) {
+  --product-accent: #b7a27f;
+}
+.theater :global(.preview-sidebar) {
+  background: #ffffff70;
+  border-right: 1px solid #fff;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+.theater :global(.product-wordmark) {
+  color: #41454d;
+  font-weight: 400;
+}
+.theater :global(.preview-sidebar > small),
+.theater :global(.preview-person small),
+.theater :global(.preview-live) {
+  color: #5f626b;
+}
+.theater :global(.preview-sidebar button) {
+  color: #5f626b;
+  border: 1px solid transparent;
+  border-radius: 12px;
+}
+.theater :global(.preview-sidebar button[aria-pressed="true"]) {
+  color: #6b687b;
+  background: #ffffff9e;
+  border-color: white;
+  box-shadow: 0 2px 10px #22222205;
+}
+.theater :global(.preview-avatar),
+.theater :global(.preview-person b) {
+  color: #5f626b;
+  background: linear-gradient(135deg, #e4e9e6, #e9e6f0);
+  border: 1px solid white;
+  border-radius: 12px;
+}
+.theater :global(.preview-topbar) {
+  border-color: #2222220b;
+}
+.theater :global(.preview-welcome p),
+.theater :global(.preview-metrics small) {
+  color: #5f626b;
+}
+.theater :global(.preview-welcome h3) {
+  font-weight: 300;
+  letter-spacing: -0.045em;
+}
+.theater :global(.preview-metrics > div),
+.theater :global(.preview-activity),
+.theater :global(.preview-module-note),
+.theater :global(.preview-table) {
+  background: linear-gradient(125deg, #ffffffd9, #ffffff80);
+  border: 1px solid white;
+  border-radius: 17px;
+  box-shadow:
+    inset 0 1px 0 white,
+    0 3px 15px #22222202;
+}
+.theater :global(.preview-metrics > div > span) {
+  color: #5d6370;
+  font-weight: 300;
+}
+.theater :global(.preview-metrics svg path) {
+  stroke: #9bafbb;
+}
+.theater :global(.preview-activity) {
+  color: #5f626b;
+}
+.theater :global(.preview-activity p) {
+  color: #5f626b;
+}
+.theater :global(.preview-activity strong) {
+  font-weight: 300;
+  color: #24262b;
+}
+.theater :global(.activity-bars i) {
+  background: linear-gradient(0deg, #b0c3cc1a, #a3bbc8bf);
+  border-radius: 5px 5px 0 0;
+}
+.theater :global(.preview-module-note p) {
+  color: #5f626b;
+}
+.theater :global(.preview-module-note a) {
+  color: #5f626b;
+}
+.theater :global(.preview-table-heading) {
+  background: #ffffff35;
+  border-color: #22222208;
+  color: #5f626b;
+}
+.theater :global(.preview-row) {
+  border-color: #22222208;
+}
+.theater :global(.preview-row > span),
+.theater :global(.preview-table-heading > span) {
+  color: #5f626b;
+}
+.theater :global(.preview-row em) {
+  color: #5f626b;
+  background: #e8eee940;
+  border: 1px solid white;
+  border-radius: 7px;
+}
+.theater :global(.theater-caption h3) {
+  font-weight: 300;
+}
+.theater :global(.theater-caption p),
+.theater :global(.theater-disclaimer) {
+  color: #5f626b;
+}
+.theater :global(.theater-caption .button-primary) {
+  background: #2b2d34;
+  border: 1px solid #22232a;
+  border-radius: 14px;
+  color: white;
+  box-shadow: inset 0 1px 0 #ffffff30;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .theater :global(.preview-sidebar) {
+    background: #fafaf7;
+    backdrop-filter: none;
+  }
+}

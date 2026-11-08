@@ -1,0 +1,9 @@
+.word {
+  display: inline-block;
+  white-space: nowrap;
+  color: inherit;
+}
+.character {
+  display: inline;
+  color: inherit;
+}

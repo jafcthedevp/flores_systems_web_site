@@ -10,6 +10,10 @@ import {
   type Sale,
 } from "./commerce-model";
 import { SalesHistory } from "./sales-history";
+import { DashboardOverview } from "./dashboard-overview";
+import { InventoryView, TablesView } from "./business-modules";
+import type { DashboardView } from "./business-dashboard";
+import { WrittenHeading } from "../landing/written-heading";
 
 type Order = {
   id: number;
@@ -22,7 +26,15 @@ type Order = {
 const stages = ["Recibido", "En cocina", "Listo", "Entregado"];
 const nextStage = ["Pasar a cocina", "Marcar listo", "Marcar entregado"];
 
-export function CommerceDemo({ kind }: { kind: "tienda" | "restaurante" }) {
+export function CommerceDemo({
+  kind,
+  view = "catalog",
+  onNavigate = () => {},
+}: {
+  kind: "tienda" | "restaurante";
+  view?: DashboardView;
+  onNavigate?: (view: DashboardView) => void;
+}) {
   const shop = kind === "tienda";
   const items = shop ? products : dishes;
   const [cart, setCart] = useState<CartEntry[]>([]);
@@ -213,323 +225,570 @@ export function CommerceDemo({ kind }: { kind: "tienda" | "restaurante" }) {
   }
   return (
     <>
-      <div className="workspace-heading">
-        <h2>{shop ? "Venta de ejemplo" : "Carta de ejemplo"}</h2>
-        <span className="badge">
-          {shop
-            ? `${sales.length} ventas simuladas`
-            : `${orders.filter((order) => order.step < 3).length} pedidos en curso`}
-        </span>
-      </div>
-      <p className="demo-hint">
-        {shop
-          ? "Repón productos, aplica un descuento y prueba una devolución después de la venta."
-          : "Personaliza cada plato, compara combinaciones y sigue las indicaciones hasta cocina."}
-      </p>
+      {view === "overview" ? (
+        <>
+          <DashboardOverview
+            kind={kind}
+            metrics={
+              shop
+                ? [
+                    {
+                      label: "Ventas netas",
+                      value: money(
+                        sales.reduce(
+                          (sum, sale) =>
+                            sum +
+                            sale.total -
+                            sale.returns.reduce((s, r) => s + r.cents, 0),
+                          0,
+                        ),
+                      ),
+                      detail: "Acumulado de esta sesión",
+                      icon: "money",
+                    },
+                    {
+                      label: "Ventas realizadas",
+                      value: String(sales.length),
+                      detail: "Operaciones simuladas",
+                      icon: "chart",
+                    },
+                    {
+                      label: "Unidades en stock",
+                      value: String(
+                        Object.values(stock).reduce((a, b) => a + b, 0),
+                      ),
+                      detail: `${items.length} productos en catálogo`,
+                      icon: "box",
+                    },
+                    {
+                      label: "Por reponer",
+                      value: String(
+                        Object.values(stock).filter((value) => value <= 3)
+                          .length,
+                      ),
+                      detail: "Productos con 3 unidades o menos",
+                      icon: "clock",
+                    },
+                  ]
+                : [
+                    {
+                      label: "Importe de pedidos",
+                      value: money(
+                        orders.reduce((sum, order) => sum + order.total, 0),
+                      ),
+                      detail: "Acumulado de esta sesión",
+                      icon: "money",
+                    },
+                    {
+                      label: "Pedidos activos",
+                      value: String(
+                        orders.filter((order) => order.step < 3).length,
+                      ),
+                      detail: "Pendientes de entregar",
+                      icon: "cart",
+                    },
+                    {
+                      label: "En cocina",
+                      value: String(
+                        orders.filter((order) => order.step === 1).length,
+                      ),
+                      detail: "En preparación",
+                      icon: "clock",
+                    },
+                    {
+                      label: "Entregados",
+                      value: String(
+                        orders.filter((order) => order.step === 3).length,
+                      ),
+                      detail: "Pedidos completados",
+                      icon: "check",
+                    },
+                  ]
+            }
+            segments={
+              shop
+                ? [...new Set(items.map((item) => item.category))].map(
+                    (label) => ({
+                      label,
+                      value: items
+                        .filter((item) => item.category === label)
+                        .reduce((sum, item) => sum + stock[item.id], 0),
+                    }),
+                  )
+                : stages.map((label, index) => ({
+                    label,
+                    value: orders.filter((order) => order.step === index)
+                      .length,
+                  }))
+            }
+            sessionValues={
+              shop
+                ? sales.map(
+                    (sale) =>
+                      (sale.total -
+                        sale.returns.reduce((sum, r) => sum + r.cents, 0)) /
+                      100,
+                  )
+                : orders.map((_, index) => index + 1)
+            }
+            breakdownTitle={
+              shop ? "Distribución del inventario" : "Estado de los pedidos"
+            }
+          />
+          <section className="module-activity">
+            <div className="module-section-heading">
+              <WrittenHeading>Lo que está pasando.</WrittenHeading>
+              <button
+                className="button button-text"
+                onClick={() => onNavigate(shop ? "history" : "kitchen")}
+              >
+                {shop ? "Ver ventas" : "Ver cocina"}
+              </button>
+            </div>
+            {shop ? (
+              sales.length ? (
+                <div className="module-table-wrap">
+                  <table className="module-table">
+                    <thead>
+                      <tr>
+                        <th>Venta</th>
+                        <th>Pago</th>
+                        <th>Importe</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sales
+                        .slice(-5)
+                        .reverse()
+                        .map((sale) => (
+                          <tr key={sale.id}>
+                            <td>Venta {String(sale.id).padStart(3, "0")}</td>
+                            <td>{sale.payment}</td>
+                            <td>{money(sale.total)}</td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="empty-state">
+                  Tu primera venta aparecerá aquí. Empieza por el punto de venta
+                  y complétala en caja.
+                </p>
+              )
+            ) : orders.length ? (
+              <div className="module-table-wrap">
+                <table className="module-table">
+                  <thead>
+                    <tr>
+                      <th>Pedido</th>
+                      <th>Servicio</th>
+                      <th>Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orders
+                      .slice(-5)
+                      .reverse()
+                      .map((order) => (
+                        <tr key={order.id}>
+                          <td>Pedido {String(order.id).padStart(3, "0")}</td>
+                          <td>{order.service}</td>
+                          <td>{stages[order.step]}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="empty-state">
+                Los pedidos que prepares aparecerán aquí, con su mesa y estado
+                de cocina.
+              </p>
+            )}
+          </section>
+        </>
+      ) : null}
       <p className="demo-feedback" role="status">
         {message}
       </p>
-      <div className="demo-columns">
-        <div>
-          <div className="demo-filters">
-            <label>
-              Buscar {shop ? "producto" : "plato"}
-              <input
-                type="search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-              />
-            </label>
-            <label>
-              Categoría
-              <select
-                value={category}
-                onChange={(event) => setCategory(event.target.value)}
-              >
-                {["Todas", ...new Set(items.map((item) => item.category))].map(
-                  (value) => (
-                    <option key={value}>{value}</option>
-                  ),
-                )}
-              </select>
-            </label>
-          </div>
-          <div className="demo-products">
-            {visible.map((item) => (
-              <article key={item.id} aria-label={item.name}>
-                <small>{item.category}</small>
-                <h3>{item.name}</h3>
-                <p>{item.detail}</p>
-                <strong>
-                  {money(cartEntry(item, choices[item.id]).cents)}
-                </strong>
-                {shop ? (
-                  <span
-                    className={
-                      stock[item.id] <= 3 ? "demo-stock-low" : "demo-stock"
-                    }
-                  >
-                    {stock[item.id]
-                      ? `${stock[item.id]} unidades disponibles`
-                      : "Agotado"}
-                  </span>
-                ) : null}
-                {!shop && item.modifierGroups?.length ? (
-                  <details className="demo-customize">
-                    <summary>Personalizar {item.name}</summary>
-                    <div className="demo-form-stack">
-                      {item.modifierGroups.map((group) => (
-                        <label key={group.id}>
-                          {group.label} de {item.name}
-                          <select
-                            value={
-                              choices[item.id]?.[group.id] ??
-                              group.options[0].id
-                            }
-                            onChange={(event) =>
-                              setChoices((current) => ({
-                                ...current,
-                                [item.id]: {
-                                  ...current[item.id],
-                                  [group.id]: event.target.value,
-                                },
-                              }))
-                            }
-                          >
-                            {group.options.map((option) => (
-                              <option key={option.id} value={option.id}>
-                                {option.label}
-                                {option.cents
-                                  ? ` (+${money(option.cents)})`
-                                  : ""}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                      ))}
-                    </div>
-                  </details>
-                ) : null}
-                <button
-                  className="button button-text"
-                  disabled={shop && cartCount(item.id) >= stock[item.id]}
-                  onClick={() => add(item)}
-                >
-                  Agregar {item.name}
-                </button>
-                {shop ? (
-                  <button
-                    className="demo-restock"
-                    aria-label={`Reponer cinco unidades de ${item.name}`}
-                    onClick={() => {
-                      setStock((current) => ({
-                        ...current,
-                        [item.id]: current[item.id] + 5,
-                      }));
-                      setMessage(
-                        `Se añadieron 5 unidades de ${item.name} al inventario de prueba.`,
-                      );
-                    }}
-                  >
-                    Reponer +5
-                  </button>
-                ) : null}
-              </article>
-            ))}
-          </div>
-          {!visible.length ? (
-            <p className="empty-state">
-              No hay resultados. Prueba otra búsqueda o categoría.
-            </p>
-          ) : null}
-        </div>
-        <aside
-          className="demo-panel demo-cart"
-          aria-label={shop ? "Caja de prueba" : "Pedido de prueba"}
-        >
-          <h3>{shop ? "Resumen de venta" : "Pedido de ejemplo"}</h3>
-          {cart.map((entry) => {
-            const description = [
-              entry.name,
-              ...entry.modifiers.map((option) => option.label),
-            ].join(", ");
-            return (
-              <div className="cart-line" key={entry.key}>
-                <span>
-                  {entry.name}
-                  {entry.modifiers.length ? (
-                    <small className="demo-modifier-summary">
-                      {entry.modifiers
-                        .map((option) => option.label)
-                        .join(" · ")}
-                    </small>
-                  ) : null}
-                  <small>{money(entry.cents * entry.quantity)}</small>
-                </span>
-                <div className="demo-quantity">
-                  <button
-                    aria-label={`Quitar una unidad de ${description}`}
-                    onClick={() => changeQuantity(entry.key, -1)}
-                  >
-                    −
-                  </button>
-                  <span>{entry.quantity}</span>
-                  <button
-                    aria-label={`Aumentar unidades de ${description}`}
-                    disabled={
-                      shop && cartCount(entry.itemId) >= stock[entry.itemId]
-                    }
-                    onClick={() => changeQuantity(entry.key, 1)}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
+      {view === "inventory" && shop ? (
+        <InventoryView
+          items={items}
+          stock={stock}
+          replenish={(id) => {
+            setStock((current) => ({ ...current, [id]: current[id] + 5 }));
+            setMessage(
+              "Reposición de 5 unidades registrada en el inventario de prueba.",
             );
-          })}
-          {!total ? (
-            <p>Agrega un {shop ? "producto" : "plato"} para probar el flujo.</p>
-          ) : null}
-          {shop && cart.length ? (
-            <div className="demo-discount">
-              <label>
-                Descuento de la venta
-                <select
-                  value={discountPercent}
-                  onChange={(event) =>
-                    setDiscountPercent(Number(event.target.value))
-                  }
-                >
-                  {[0, 5, 10, 15, 20].map((percent) => (
-                    <option key={percent} value={percent}>
-                      {percent ? `${percent}% de descuento` : "Sin descuento"}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <p>Subtotal: {money(subtotal)}</p>
-              {discountCents ? (
-                <p className="demo-complete">
-                  Descuento: −{money(discountCents)}
+          }}
+        />
+      ) : null}
+      {view === "tables" && !shop ? (
+        <TablesView
+          orders={orders}
+          selected={table}
+          onSelect={(value) => {
+            setService("En mesa");
+            setTable(value);
+            onNavigate("catalog");
+          }}
+          onTakeaway={() => {
+            setService("Para llevar");
+            onNavigate("catalog");
+          }}
+        />
+      ) : null}
+      {view === "catalog" || view === "checkout" ? (
+        <div className="demo-columns" data-module-view={view}>
+          {view === "catalog" ? (
+            <div>
+              <div className="demo-filters">
+                <label>
+                  Buscar {shop ? "producto" : "plato"}
+                  <input
+                    type="search"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                  />
+                </label>
+                <label>
+                  Categoría
+                  <select
+                    value={category}
+                    onChange={(event) => setCategory(event.target.value)}
+                  >
+                    {[
+                      "Todas",
+                      ...new Set(items.map((item) => item.category)),
+                    ].map((value) => (
+                      <option key={value}>{value}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <div className="demo-products">
+                {visible.map((item) => (
+                  <article key={item.id} aria-label={item.name}>
+                    <small>{item.category}</small>
+                    <h3>{item.name}</h3>
+                    <p>{item.detail}</p>
+                    <strong>
+                      {money(cartEntry(item, choices[item.id]).cents)}
+                    </strong>
+                    {shop ? (
+                      <span
+                        className={
+                          stock[item.id] <= 3 ? "demo-stock-low" : "demo-stock"
+                        }
+                      >
+                        {stock[item.id]
+                          ? `${stock[item.id]} unidades disponibles`
+                          : "Agotado"}
+                      </span>
+                    ) : null}
+                    {!shop && item.modifierGroups?.length ? (
+                      <details className="demo-customize">
+                        <summary>Personalizar {item.name}</summary>
+                        <div className="demo-form-stack">
+                          {item.modifierGroups.map((group) => (
+                            <label key={group.id}>
+                              {group.label} de {item.name}
+                              <select
+                                value={
+                                  choices[item.id]?.[group.id] ??
+                                  group.options[0].id
+                                }
+                                onChange={(event) =>
+                                  setChoices((current) => ({
+                                    ...current,
+                                    [item.id]: {
+                                      ...current[item.id],
+                                      [group.id]: event.target.value,
+                                    },
+                                  }))
+                                }
+                              >
+                                {group.options.map((option) => (
+                                  <option key={option.id} value={option.id}>
+                                    {option.label}
+                                    {option.cents
+                                      ? ` (+${money(option.cents)})`
+                                      : ""}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                          ))}
+                        </div>
+                      </details>
+                    ) : null}
+                    <button
+                      className="button button-text"
+                      disabled={shop && cartCount(item.id) >= stock[item.id]}
+                      onClick={() => add(item)}
+                    >
+                      Agregar {item.name}
+                    </button>
+                    {shop ? (
+                      <button
+                        className="demo-restock"
+                        aria-label={`Reponer cinco unidades de ${item.name}`}
+                        onClick={() => {
+                          setStock((current) => ({
+                            ...current,
+                            [item.id]: current[item.id] + 5,
+                          }));
+                          setMessage(
+                            `Se añadieron 5 unidades de ${item.name} al inventario de prueba.`,
+                          );
+                        }}
+                      >
+                        Reponer +5
+                      </button>
+                    ) : null}
+                  </article>
+                ))}
+              </div>
+              {!visible.length ? (
+                <p className="empty-state">
+                  No hay resultados. Prueba otra búsqueda o categoría.
                 </p>
               ) : null}
             </div>
           ) : null}
-          <p className="demo-total">Total: {money(total)}</p>
-          <div className="demo-form-stack">
-            {shop ? (
-              <>
-                <label>
-                  Medio de pago
-                  <select
-                    value={payment}
-                    onChange={(event) => setPayment(event.target.value)}
-                  >
-                    {["Efectivo", "Yape simulado", "Tarjeta simulada"].map(
-                      (value) => (
-                        <option key={value}>{value}</option>
-                      ),
-                    )}
-                  </select>
-                </label>
-                {payment === "Efectivo" ? (
-                  <>
-                    <label>
-                      Monto recibido (S/)
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={cash}
-                        onChange={(event) => setCash(event.target.value)}
-                      />
-                    </label>
-                    <button
-                      className="button button-text"
-                      disabled={!total}
-                      onClick={() => setCash((total / 100).toFixed(2))}
-                    >
-                      Pago exacto
-                    </button>
-                    <p>
-                      Vuelto:{" "}
-                      <strong>
-                        {money(
-                          Math.max(
-                            0,
-                            Number.isFinite(received) ? received - total : 0,
-                          ),
-                        )}
-                      </strong>
-                    </p>
-                  </>
-                ) : (
-                  <p>Pago de prueba, sin conexión a una pasarela.</p>
-                )}
-              </>
-            ) : (
-              <>
-                <label>
-                  Tipo de servicio
-                  <select
-                    value={service}
-                    onChange={(event) => setService(event.target.value)}
-                  >
-                    <option>En mesa</option>
-                    <option>Para llevar</option>
-                  </select>
-                </label>
-                {service === "En mesa" ? (
+          {view === "checkout" ? (
+            <aside
+              className="demo-panel demo-cart"
+              aria-label={shop ? "Caja de prueba" : "Pedido de prueba"}
+            >
+              <h3>{shop ? "Resumen de venta" : "Pedido de ejemplo"}</h3>
+              {cart.map((entry) => {
+                const description = [
+                  entry.name,
+                  ...entry.modifiers.map((option) => option.label),
+                ].join(", ");
+                return (
+                  <div className="cart-line" key={entry.key}>
+                    <span>
+                      {entry.name}
+                      {entry.modifiers.length ? (
+                        <small className="demo-modifier-summary">
+                          {entry.modifiers
+                            .map((option) => option.label)
+                            .join(" · ")}
+                        </small>
+                      ) : null}
+                      <small>{money(entry.cents * entry.quantity)}</small>
+                    </span>
+                    <div className="demo-quantity">
+                      <button
+                        aria-label={`Quitar una unidad de ${description}`}
+                        onClick={() => changeQuantity(entry.key, -1)}
+                      >
+                        −
+                      </button>
+                      <span>{entry.quantity}</span>
+                      <button
+                        aria-label={`Aumentar unidades de ${description}`}
+                        disabled={
+                          shop && cartCount(entry.itemId) >= stock[entry.itemId]
+                        }
+                        onClick={() => changeQuantity(entry.key, 1)}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+              {!total ? (
+                <p>
+                  Agrega un {shop ? "producto" : "plato"} para probar el flujo.
+                </p>
+              ) : null}
+              {shop && cart.length ? (
+                <div className="demo-discount">
                   <label>
-                    Mesa
+                    Descuento de la venta
                     <select
-                      value={table}
-                      onChange={(event) => setTable(event.target.value)}
+                      value={discountPercent}
+                      onChange={(event) =>
+                        setDiscountPercent(Number(event.target.value))
+                      }
                     >
-                      {Array.from({ length: 6 }, (_, index) => (
-                        <option key={index}>Mesa {index + 1}</option>
+                      {[0, 5, 10, 15, 20].map((percent) => (
+                        <option key={percent} value={percent}>
+                          {percent
+                            ? `${percent}% de descuento`
+                            : "Sin descuento"}
+                        </option>
                       ))}
                     </select>
                   </label>
-                ) : null}
-                <label>
-                  Notas del pedido
-                  <textarea
-                    maxLength={160}
-                    rows={2}
-                    placeholder="Ej.: sin cebolla"
-                    value={note}
-                    onChange={(event) => setNote(event.target.value)}
-                  />
-                </label>
-              </>
-            )}
+                  <p>Subtotal: {money(subtotal)}</p>
+                  {discountCents ? (
+                    <p className="demo-complete">
+                      Descuento: −{money(discountCents)}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+              <p className="demo-total">Total: {money(total)}</p>
+              <div className="demo-form-stack">
+                {shop ? (
+                  <>
+                    <label>
+                      Medio de pago
+                      <select
+                        value={payment}
+                        onChange={(event) => setPayment(event.target.value)}
+                      >
+                        {["Efectivo", "Yape simulado", "Tarjeta simulada"].map(
+                          (value) => (
+                            <option key={value}>{value}</option>
+                          ),
+                        )}
+                      </select>
+                    </label>
+                    {payment === "Efectivo" ? (
+                      <>
+                        <label>
+                          Monto recibido (S/)
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={cash}
+                            onChange={(event) => setCash(event.target.value)}
+                          />
+                        </label>
+                        <button
+                          className="button button-text"
+                          disabled={!total}
+                          onClick={() => setCash((total / 100).toFixed(2))}
+                        >
+                          Pago exacto
+                        </button>
+                        <p>
+                          Vuelto:{" "}
+                          <strong>
+                            {money(
+                              Math.max(
+                                0,
+                                Number.isFinite(received)
+                                  ? received - total
+                                  : 0,
+                              ),
+                            )}
+                          </strong>
+                        </p>
+                      </>
+                    ) : (
+                      <p>Pago de prueba, sin conexión a una pasarela.</p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <label>
+                      Tipo de servicio
+                      <select
+                        value={service}
+                        onChange={(event) => setService(event.target.value)}
+                      >
+                        <option>En mesa</option>
+                        <option>Para llevar</option>
+                      </select>
+                    </label>
+                    {service === "En mesa" ? (
+                      <label>
+                        Mesa
+                        <select
+                          value={table}
+                          onChange={(event) => setTable(event.target.value)}
+                        >
+                          {Array.from({ length: 6 }, (_, index) => (
+                            <option key={index}>Mesa {index + 1}</option>
+                          ))}
+                        </select>
+                      </label>
+                    ) : null}
+                    <label>
+                      Notas del pedido
+                      <textarea
+                        maxLength={160}
+                        rows={2}
+                        placeholder="Ej.: sin cebolla"
+                        value={note}
+                        onChange={(event) => setNote(event.target.value)}
+                      />
+                    </label>
+                  </>
+                )}
+              </div>
+              <div className="demo-button-row">
+                <button
+                  className="button button-primary"
+                  disabled={!total}
+                  onClick={finish}
+                >
+                  Simular {shop ? "venta" : "pedido"}
+                </button>
+                <button
+                  className="button button-text"
+                  disabled={!total}
+                  onClick={() => {
+                    setCart([]);
+                    setDiscountPercent(0);
+                    setCash("");
+                    setNote("");
+                    setMessage("");
+                  }}
+                >
+                  Vaciar
+                </button>
+              </div>
+              <button
+                className="button button-text"
+                onClick={() => onNavigate("catalog")}
+              >
+                {shop ? "Volver a productos" : "Volver a la carta"}
+              </button>
+              <button
+                className="button button-text"
+                onClick={() => onNavigate(shop ? "history" : "kitchen")}
+              >
+                {shop
+                  ? "Ver ventas y devoluciones"
+                  : "Ver seguimiento en cocina"}
+              </button>
+            </aside>
+          ) : null}
+        </div>
+      ) : null}
+      {view === "catalog" ? (
+        <div className="catalog-basket" aria-label="Selección actual">
+          <div>
+            <strong>
+              {cart.reduce((sum, item) => sum + item.quantity, 0)}{" "}
+              {shop ? "productos" : "platos"} en tu selección
+            </strong>
+            <span>
+              {money(total)}
+              {!shop
+                ? ` · ${service === "En mesa" ? table : "Para llevar"}`
+                : ""}
+            </span>
           </div>
-          <div className="demo-button-row">
-            <button
-              className="button button-primary"
-              disabled={!total}
-              onClick={finish}
-            >
-              Simular {shop ? "venta" : "pedido"}
-            </button>
-            <button
-              className="button button-text"
-              disabled={!total}
-              onClick={() => {
-                setCart([]);
-                setDiscountPercent(0);
-                setCash("");
-                setNote("");
-                setMessage("");
-              }}
-            >
-              Vaciar
-            </button>
-          </div>
-        </aside>
-      </div>
-      {shop && lastSale ? (
+          <button
+            className="button button-primary"
+            onClick={() => onNavigate("checkout")}
+          >
+            {shop ? "Ir a caja" : "Revisar pedido"}
+          </button>
+        </div>
+      ) : null}
+      {shop && lastSale && (view === "checkout" || view === "history") ? (
         <section className="demo-receipt" aria-label="Última venta simulada">
           <div>
             <h3>Venta simulada {String(lastSale.id).padStart(3, "0")}</h3>
@@ -573,8 +832,10 @@ export function CommerceDemo({ kind }: { kind: "tienda" | "restaurante" }) {
           </div>
         </section>
       ) : null}
-      {shop ? <SalesHistory sales={sales} onReturn={returnSale} /> : null}
-      {!shop ? (
+      {shop && view === "history" ? (
+        <SalesHistory sales={sales} onReturn={returnSale} />
+      ) : null}
+      {!shop && view === "kitchen" ? (
         <section className="demo-orders">
           <h3>Seguimiento de pedidos</h3>
           {!orders.length ? (

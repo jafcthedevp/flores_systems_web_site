@@ -1,40 +1,15 @@
-import { Header } from "@/components/landing/header";
-import { Hero } from "@/components/landing/hero";
-import { Marquee } from "@/components/landing/marquee";
-import { Solutions } from "@/components/landing/solutions";
-import { Sectors } from "@/components/landing/sectors";
-import { Principles } from "@/components/landing/principles";
-import { About } from "@/components/landing/about";
-import { MotionContent } from "@/components/landing/motion-content";
-import { DemoInvitation } from "@/components/landing/demo-invitation";
-import { Contact } from "@/components/landing/contact";
-import { Footer } from "@/components/landing/footer";
-import { AnalyticsEvents } from "@/components/landing/analytics-events";
-import { ScrollMotion } from "@/components/landing/scroll-motion";
-import { HeadingLight } from "@/components/landing/heading-light";
+import { IBM_Plex_Sans } from "next/font/google";
+import { AgenticLanding } from "@/components/landing/agentic-landing";
+const font = IBM_Plex_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  display: "swap",
+  variable: "--font-agentic",
+});
 export default function Home() {
   return (
-    <>
-      <AnalyticsEvents />
-      <a className="skip-link" href="#contenido">
-        Ir al contenido
-      </a>
-      <Header overHero />
-      <ScrollMotion>
-        <main id="contenido">
-          <Hero />
-          <Marquee />
-          <Solutions />
-          <Sectors />
-          <DemoInvitation />
-          <MotionContent />
-          <Principles />
-          <About />
-          <Contact />
-        </main>
-        <Footer />
-      </ScrollMotion>
-      <HeadingLight />
-    </>
+    <div className={font.variable}>
+      <AgenticLanding />
+    </div>
   );
 }
